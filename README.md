@@ -6,9 +6,9 @@ The dockerized tool is set to make use of a folder containing a set of LIDAR mea
 
 ## Usage:
 Docker creation (requires "Docker"):
-> git clone https://github.com/Hector-Xavier/serious_buziness
+> git clone https://github.com/Hector-Xavier/SAFETRANS_LIDAR_analysis
 
-> docker build -t safetrans serious_buziness
+> docker build -t safetrans SAFETRANS_LIDAR_analysis
 
 Container deployment:
 **Deployment example**
