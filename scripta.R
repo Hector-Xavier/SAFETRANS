@@ -309,7 +309,7 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
         incoming_vis <- c(incoming_vis,visibility_range(extinction_profile[,i],bin_width,model,incoming=TRUE,incoming_range=j*bin_width,verbose=FALSE))
       if (is.null(model))
         model <- "no_model"
-      png(file=file.path(paste(paste(getwd(),"Azimuth_visibility_plots",sep="/"),paste(i,"_Visibility_",model,"_",rownames(visibility)[i],".png", sep = ""),sep="/")),width=3300,height=2000)
+      png(file=file.path(paste(paste(getwd(),"Azimuth_visibility_plots",sep="/"),paste(model,"_Visibility_",i,"_",rownames(visibility)[i],".png", sep = ""),sep="/")),width=3300,height=2000)
       barplot(incoming_vis[length(incoming_vis):1]/1000,log="y",col=c("red","grey")[(seq(length(incoming_vis))*100*bin_width>=visibility[i,1])+1],names.arg=paste(seq(dim(extinction_profile)[1],1,-100)[length(incoming_vis):1]/10*bin_width,"km",sep=" "),las=2,xlab="Distance",ylab="Visibility (km)",main=paste(rownames(visibility)[i], " [model: ",model,"]",sep=""))
       legend("topleft",legend=c("Optical contact with overhead airspace","No optical contact"),pch=15,col=c("red","grey"))
       dev.off()
