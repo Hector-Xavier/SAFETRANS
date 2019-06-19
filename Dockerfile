@@ -2,6 +2,10 @@ FROM r-base:latest
 USER root
 RUN apt-get update && apt-get -y upgrade && apt-get install libcurl4-openssl-dev
 
+WORKDIR /tmp
+RUN R -e "install.packages('plotrix', dependencies = TRUE)"
+RUN cd .. && rm -R tmp
+
 RUN mkdir /data
 RUN mkdir /home/SAFETRANS
 ADD SAFETRANS_visibility_module.R /home/SAFETRANS/SAFETRANS_visibility_module.R
