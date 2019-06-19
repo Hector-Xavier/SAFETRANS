@@ -1,3 +1,5 @@
+library(plotrix)
+
 reading_and_preparation <- function(filename,significant_data_sets)
 {
   file_under_scrutiny <- file(filename, "rb")
@@ -290,10 +292,10 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
     }
     if(!file.exists(paste(getwd(),"Azimuth_visibility_plots",sep="/")))
       dir.create(paste(getwd(),"Azimuth_visibility_plots",sep="/"))
+    if (output_file)
+      message("Calculating radial visibility over visible range. Selected atmospheric model: ",model)     
     if (!verbose)
       progress <- txtProgressBar(max=length(visibility),char="=",style=3)
-    if (output_file)
-      message("Calculating radial visibility over visible range. Selected atmospheric model: ",model) 
     for (i in 1:length(visibility))
     {
       if (verbose)
