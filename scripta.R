@@ -204,13 +204,13 @@ visibility_range <- function(extinction,bin_width,model=NULL,incoming=FALSE,inco
     if (sum(model==c("urban-rural","maritime"))==0)
       stop("Incorrect model designation. Correct designations are: urban-rural, maritime, NULL")
   if (incoming && is.null(incoming_range))
-    stop("Please provide the range of the incoming object in metres.")
+    stop("Please provide the distance of the incoming object in metres.")
   if (verbose)
   {
     if (!is.null(model))
     {
       message("Selected model: ",as.character(model))
-      message("Translating visibility from 1054 nm to visible range.")
+      message("Converting visibility from 1054 nm to the visible spectrum.")
     } else {
       message("No model selected. Calculating visibility for a wavelength of 1054 nm.")
     }
@@ -249,7 +249,7 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
     for (i in 1:dim(extinction_profile)[2])
     {
       message(i,"/",dim(extinction_profile)[2]," - Measurement set designation: ",colnames(extinction_profile)[i])
-      visibility <- c(visibility,visibility_range(extinction=extinction_profile[,i],bin_width=bin_width,model=model,verbose=TRUE))
+      visibility <- c(visibility,visibility_range(extinction=extinction_profile[,i],bin_width,model=model,verbose=TRUE))
       message("Outward visibility: ",visibility[i]," m.")
     }
   } else {
@@ -269,6 +269,8 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
   visibility <- matrix(visibility,ncol=1,dimnames=list(colnames(extinction_profile),model))
   if (output_file && is_scan)
   {
+    if(!file.exists(paste(getwd(),"Azimuth_visibility_plots",sep="/")))
+      dir.create(paste(getwd(),"Azimuth_visibility_plots",sep="/"))
     angle <- c()
     channels <- c()
     for (i in 1:length(visibility))
@@ -276,48 +278,47 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
       angle <- c(angle,as.integer(strsplit(rownames(visibility)[i],split="_")[[1]][4]))
       channels <- c(channels,as.integer(strsplit(rownames(visibility)[i],split="_")[[1]][5]))
     }
-    
-    if (length(levels(as.factor(channels)))>1)
+    for (i in 1:length(levels(as.factor(channels))))
     {
-      for (i in 1:length(levels(as.factor(channels))))
+      png(file=file.path(paste(getwd(),"Azimuth_visibility_plots",sep="/"),paste("Radial_visibility_",model,"_channel_",levels(as.factor(channels))[i],".png", sep = "")),width=1000,height=1000)
+      radial.plot(lengths = visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1],radial.pos = angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i]/180*pi,labels=c("N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"),label.pos=((seq(16)-1)*22.5-angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i][1])/180*pi,start=-(angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i][1]/180-1/2)*pi,clockwise=TRUE,rp.type="p",radial.lim = pretty(range(visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1])),show.grid.labels=1,radial.labels = paste(pretty(range(visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1]))/1000,"km",sep=" "),show.centroid=TRUE,main=paste("Radial visibility at",strsplit(rownames(visibility)[1],split="_")[[1]][2],"degrees in channel",levels(as.factor(channels))[i],sep=" "))
+      dev.off()
+    }
+    if(!file.exists(paste(getwd(),"Azimuth_visibility_plots",paste("Incoming_visibilities",model,sep="_"),sep="/")))
+    {
+      dir.create(paste(getwd(),"Azimuth_visibility_plots",paste("Incoming_visibilities",model,sep="_"),sep="/"))
+      message("Calculating radial visibility ranges of incoming objects. Selected atmospheric model: ",model,".") 
+      if (!verbose)
+        progress <- txtProgressBar(max=length(visibility),char="=",style=3)
+      for (i in 1:length(visibility))
       {
-        png(file=file.path(getwd(),paste("Radial_visibility_",model,"_channel_",levels(as.factor(channels))[i],".png", sep = "")),width=1000,height=1000)
-        radial.plot(lengths = visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1],radial.pos = angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i]/180*pi,labels=c("N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"),label.pos=((seq(16)-1)*22.5-angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i][1])/180*pi,start=-(angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i][1]/180-1/2)*pi,clockwise=TRUE,rp.type="p",radial.lim = pretty(range(visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1])),show.grid.labels=1,radial.labels = paste(pretty(range(visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1]))/1000,"km",sep=" "),show.centroid=TRUE,main=paste("Radial visibility at",strsplit(rownames(visibility)[1],split="_")[[1]][2],"degrees in channel",levels(as.factor(channels))[i],sep=" "))
+        if (verbose)
+        {
+          message(i,"/",dim(extinction_profile)[2]," - Calculating visibilities of measurement set: ",colnames(extinction_profile)[i])
+        } else {
+          setTxtProgressBar(progress,i)
+        }
+        if (model=="no_model")
+          model <- NULL
+        incoming_vis <- c()
+        for (j in seq(6000,1,-50))
+          incoming_vis <- c(incoming_vis,visibility_range(extinction_profile[,i],bin_width,model,incoming=TRUE,incoming_range=j*bin_width,verbose=FALSE))
+        if (is.null(model))
+          model <- "no_model"
+        png(file=file.path(paste(paste(getwd(),"Azimuth_visibility_plots",paste("Incoming_visibilities",model,sep="_"),sep="/"),paste("Visibility_",rownames(visibility)[i],".png", sep = ""),sep="/")),width=2000,height=1600)
+        par(mar= c(6.5, 4, 4, 2) + 0.1)
+        par(mgp = c(5,1,0))
+        barplot(incoming_vis[length(incoming_vis):1]/1000,log="y",col=c("red","grey")[(seq(length(incoming_vis))*50*bin_width>=visibility[i,1])+1],names.arg=paste(seq(6000,1,-50)[length(incoming_vis):1]*bin_width/1000,"km",sep=" "),las=2,xlab="Distance",ylab="Visibility (km)",main=paste(rownames(visibility)[i], " [model: ",model,"]",sep=""))
+        legend("topleft",legend=c("Optical contact with overhead airspace","No optical contact"),pch=15,col=c("red","grey"))
+        par(mar= c(5, 4, 4, 2) + 0.1)
+        par(mgp = c(3,1,0))
         dev.off()
       }
+      if (!verbose)
+        close(progress)
     } else {
-      png(file=file.path(getwd(),paste("Radial_visibility_",model,".png", sep = "")),width=1000,height=1000)
-      radial.plot(lengths = visibility[,1],radial.pos = angle/180*pi,labels=c("N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"),label.pos=((seq(16)-1)*22.5-angle[1])/180*pi,start=-(angle[1]/180-1/2)*pi,clockwise=TRUE,rp.type="p",radial.lim = pretty(range(visibility[,1])),show.grid.labels=1,radial.labels = paste(pretty(range(visibility[,1]))/1000,"km",sep=" "),show.centroid=TRUE,main=paste("Radial visibility at ",strsplit(rownames(visibility)[1],split="_")[[1]][2]," degrees [model: ",model,"]",sep=""))
-      dev.off()
+      message("Radial visibility plots for atmospheric model '",model,"' already exist. Calculation & creation skipped.") 
     }
-    if(!file.exists(paste(getwd(),"Azimuth_visibility_plots",sep="/")))
-      dir.create(paste(getwd(),"Azimuth_visibility_plots",sep="/"))
-    if (output_file)
-      message("Calculating radial visibility over visible range. Selected atmospheric model: ",model)     
-    if (!verbose)
-      progress <- txtProgressBar(max=length(visibility),char="=",style=3)
-    for (i in 1:length(visibility))
-    {
-      if (verbose)
-      {
-        message(i,"/",dim(extinction_profile)[2]," - Calculating visibilities of measurement set: ",colnames(extinction_profile)[i])
-      } else {
-        setTxtProgressBar(progress,i)
-      }
-      if (model=="no_model")
-        model <- NULL
-      incoming_vis <- c()
-      for (j in seq(6000,1,-50))
-        incoming_vis <- c(incoming_vis,visibility_range(extinction_profile[,i],bin_width,model,incoming=TRUE,incoming_range=j*bin_width,verbose=FALSE))
-      if (is.null(model))
-        model <- "no_model"
-      png(file=file.path(paste(paste(getwd(),"Azimuth_visibility_plots",sep="/"),paste(model,"_Visibility_",i,"_",rownames(visibility)[i],".png", sep = ""),sep="/")),width=2000,height=1600)
-      barplot(incoming_vis[length(incoming_vis):1]/1000,log="y",col=c("red","grey")[(seq(length(incoming_vis))*50*bin_width>=visibility[i,1])+1],names.arg=paste(seq(6000,1,-50)[length(incoming_vis):1]*bin_width/1000,"km",sep=" "),las=2,xlab="Distance",ylab="Visibility (km)",main=paste(rownames(visibility)[i], " [model: ",model,"]",sep=""))
-      legend("topleft",legend=c("Optical contact with overhead airspace","No optical contact"),pch=15,col=c("red","grey"))
-      dev.off()
-    }
-    if (!verbose)
-      close(progress)
   }
   return(visibility)
 }
@@ -332,7 +333,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,incoming=
   colnames(cartesian_profile) <- paste("Distance",rownames(extinction_profile)[1:dim(cartesian_profile)[2]],"m",sep="_")
   rownames(cartesian_profile) <- paste("Height",rownames(extinction_profile)[1:dim(cartesian_profile)[1]],"m",sep="_")
   if (incoming && (ceiling(incoming_distance/bin_width)>dim(cartesian_profile)[2] || incoming_height>maximum_height))
-    stop("Designated coordinates are beyond the detectable range. Maximum height: ",maximum_height," m, maximum distance: ",dim(cartesian_profile)[2]*bin_width," m.")
+    stop("Designated coordinates beyond the detection range. Maximum height: ",maximum_height," m, maximum distance: ",dim(cartesian_profile)[2]*bin_width," m.")
   angles <- c()
   for (i in 1:dim(extinction_profile)[2])
     angles <- c(angles,as.numeric(strsplit(colnames(extinction_profile)[i],split="_")[[1]][2]))
@@ -431,6 +432,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,incoming=
     message("Writing output files to disk...")
     if (!file.exists(paste("Cartesian_extinction_profile_",model,".txt.gz",sep="")))
     {
+      message(paste("Cartesian_extinction_profile_",model,sep="")," not present. Please wait for first-time creation and compression.")
       write.table(cartesian_profile,file=paste("Cartesian_extinction_profile_",model,".txt",sep=""),quote=FALSE,sep="\t",row.names=TRUE,col.names=TRUE)
       system(paste("gzip ","Cartesian_extinction_profile_",model,".txt",sep=""))      
     }
@@ -446,4 +448,3 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,incoming=
   }
   #return(cartesian_profile)
 }
- 
