@@ -202,7 +202,7 @@ visibility_range <- function(extinction,bin_width,model=NULL,incoming=FALSE,inco
 {
   if (!is.null(model))
     if (sum(model==c("urban-rural","maritime"))==0)
-      stop("Incorrect model designation. Correct designations are: unrban-rural, maritime, NULL")
+      stop("Incorrect model designation. Correct designations are: urban-rural, maritime, NULL")
   if (incoming && is.null(incoming_range))
     stop("Please provide the range of the incoming object in metres.")
   if (verbose)
@@ -249,7 +249,7 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
     for (i in 1:dim(extinction_profile)[2])
     {
       message(i,"/",dim(extinction_profile)[2]," - Measurement set designation: ",colnames(extinction_profile)[i])
-      visibility <- c(visibility,visibility_range(extinction=extinction_profile[,i],bin_width,model=model,verbose=TRUE))
+      visibility <- c(visibility,visibility_range(extinction=extinction_profile[,i],bin_width=bin_width,model=model,verbose=TRUE))
       message("Outward visibility: ",visibility[i]," m.")
     }
   } else {
