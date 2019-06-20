@@ -41,7 +41,7 @@ if (output)
 
 if (!is_scan)
 {
-  radial_visibility_profile(extinction_profile=scanning_profile_extinction(directory,channels,is_scan,1,verbose,output),model,output,verbose)
+  radial_visibility_profile(extinction_profile=scanning_profile_extinction(directory,channels,is_scan,1,verbose,output),is_scan,model,output,verbose)
 } else {
   message("Processing measurements as a set of ",scan_type," measurements.")
   if (file.exists("Radial_extinction_coefficients_1054_nm.txt"))
@@ -54,7 +54,7 @@ if (!is_scan)
   }
   if (scan_type=="azimuth")
   {
-    radial_visibility_profile(extinction,model,output,verbose)
+    radial_visibility_profile(extinction,is_scan,model,output,verbose)
   } else {
     message("Extending radial extinction profile to cartesian coordinate system.")
     if (!is.null(height) && !is.null(distance))
