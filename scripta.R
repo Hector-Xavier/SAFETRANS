@@ -200,9 +200,6 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
 
 visibility_range <- function(extinction,bin_width,model=NULL,incoming=FALSE,incoming_range=NULL,verbose=FALSE)
 {
-  if (!is.null(model))
-    if (sum(model==c("urban-rural","maritime"))==0)
-      stop("Incorrect model designation. Correct designations are: urban-rural, maritime, NULL")
   if (incoming && is.null(incoming_range))
     stop("Please provide the distance of the incoming object in metres.")
   if (verbose)
@@ -212,7 +209,7 @@ visibility_range <- function(extinction,bin_width,model=NULL,incoming=FALSE,inco
       message("Selected model: ",as.character(model))
       message("Converting visibility from 1054 nm to the visible spectrum.")
     } else {
-      message("No model selected. Calculating visibility for a wavelength of 1054 nm.")
+      message("No model selected. Visibility will be calculated for a wavelength of 1054 nm.")
     }
   }
   if (!is.null(model))
@@ -294,7 +291,7 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
       {
         if (verbose)
         {
-          message(i,"/",dim(extinction_profile)[2]," - Calculating visibilities of measurement set: ",colnames(extinction_profile)[i])
+          message(i,"/",dim(extinction_profile)[2]," - Calculating visibilities for measurement set: ",colnames(extinction_profile)[i])
         } else {
           setTxtProgressBar(progress,i)
         }
