@@ -12,7 +12,7 @@ if (arguments[4]!="null")
 }
 if (!is.null(model))
   if (sum(model==c("urban-rural","maritime"))==0)
-    stop("Incorrect model designation. Correct designations are: unrban-rural, maritime, null")
+    stop("Incorrect model designation. Correct designations are: urban-rural, maritime, null")
 incoming <- as.logical(arguments[5])
 if (arguments[6]!="null")
 {
