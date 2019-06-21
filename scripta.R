@@ -209,7 +209,7 @@ visibility_range <- function(extinction,bin_width,model=NULL,incoming=FALSE,inco
       message("Selected model: ",as.character(model))
       message("Converting visibility from 1054 nm to the visible spectrum.")
     } else {
-      message("No model selected. Visibility will be calculated for a wavelength of 1054 nm.")
+      message("No model selected. Visibility will be calculated at 1054 nm.")
     }
   }
   if (!is.null(model))
