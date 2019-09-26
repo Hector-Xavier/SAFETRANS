@@ -1,6 +1,6 @@
 FROM r-base:latest
 USER root
-RUN apt-get update && apt-get -y upgrade && apt-get install libcurl4-openssl-dev
+RUN apt-get update && apt-get -y upgrade && apt-get -y install libcurl4-openssl-dev
 
 WORKDIR /tmp
 RUN R -e "install.packages('plotrix', dependencies = TRUE)"
