@@ -49,11 +49,14 @@ if (!is_scan)
     message("Radial extinction coefficent profile present. Loading data...")
     extinction <- read.table(file="Radial_extinction_coefficients_1054_nm.txt",header=TRUE,quote="")
   } else {
-    message("Calculating radial extinction coefficent profile.")
+    if (!verbose)
+      message("Importing data and calculating the radial extinction coefficent profile.")
     extinction <- scanning_profile_extinction(directory,channels,is_scan,1,verbose,output)
   }
   if (scan_type=="azimuth")
   {
+    if (!verbose)
+      message("Calculating the radial visibility profile.")
     radial_visibility_profile(extinction,is_scan,model,output,verbose)
   } else {
     message("Extending radial extinction profile to cartesian coordinate system.")
