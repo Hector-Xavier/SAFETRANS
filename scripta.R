@@ -405,20 +405,20 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,incoming=
       {
         if (horizontal_visibility < incoming_distance)
         {
-          message("Horizontal incoming visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m : ",horizontal_visibility," m.")
+          message("Horizontal incoming visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",horizontal_visibility," m.")
         } else {
           message("Incoming object at a height of ",incoming_height," m and distance of ",incoming_distance," m has optical contact with overhead airspace.")
         }
       } else {
-        message("Horizontal visibility of outcoming object at a height of ",incoming_height," m and distance of ",incoming_distance," m : ",horizontal_visibility," m.")
+        message("Horizontal visibility of outcoming object at a height of ",incoming_height," m and distance of ",incoming_distance," m: ",horizontal_visibility," m.")
       }
       if (vertical_visibility < incoming_height)
       {
-        message("Vertical visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m : ",vertical_visibility," m.")
+        message("Vertical visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",vertical_visibility," m.")
         message(slant_visibility)
       } else {
         message(c("Outcoming","Incoming")[as.integer(incoming)+1]," object at a height of ",incoming_height," m and distance of ",incoming_distance," m has optical contact with ground.")
-        message("Slant visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m : ",slant_visibility," m.")
+        message("Slant visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",slant_visibility," m.")
       }
     }
   }
