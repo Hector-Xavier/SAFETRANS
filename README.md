@@ -20,6 +20,9 @@ Container deployment:
 **Explicit form of arguments**
 > docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R channels is_scan scan_type model incoming height distance output verbose
 
+**Granting user access to newly-created files**
+> sudo chown -R $(id -u) your/LIDAR/scan/folder/Output
+
 
 ## Arguments:
 **your/LIDAR/scan/folder** - Full path to the folder containing the LIDAR measurements.
