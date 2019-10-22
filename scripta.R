@@ -194,7 +194,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   colnames(data) <- headers
   rownames(data) <- as.character(seq(dim(data)[1])*bin_width)
   if(output_file)
-    write.table(data,file=paste("Radial_extinction_coefficients_1054_nm.txt",sep="/"),quote=FALSE,sep="\t",row.names=TRUE,col.names=TRUE)
+    write.table(data,file=paste("Radial_extinction_coefficients_1064_nm.txt",sep="/"),quote=FALSE,sep="\t",row.names=TRUE,col.names=TRUE)
   return(data)
 }
 
@@ -207,17 +207,17 @@ visibility_range <- function(extinction,bin_width,model=NULL,incoming=FALSE,inco
     if (!is.null(model))
     {
       message("Selected model: ",as.character(model))
-      message("Converting visibility from 1054 nm to the visible spectrum.")
+      message("Converting visibility from 1064 nm to the visible spectrum.")
     } else {
-      message("No model selected. Visibility will be calculated at 1054 nm.")
+      message("No model selected. Visibility will be calculated at 1064 nm.")
     }
   }
   if (!is.null(model))
   {
     if (model=="urban-rural")
-      extinction <- (extinction/0.314)^(1/1.11)
+      extinction <- (extinction/0.503)^(1/1.08)
     if (model=="maritime")
-      extinction <- (extinction/0.996)^(1/1.20)
+      extinction <- (extinction/0.983)^(1/1.16)
   }
   visibility <- c()
   if (incoming)
