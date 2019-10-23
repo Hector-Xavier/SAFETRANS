@@ -33,7 +33,7 @@ Container deployment:
 
 **Rscript SAFETRANS_visibility_module.R** - Do not change: points to the script performing the analysis.
 
-**channels** - Designates the channel or channels of the data scan files that will be used for analysis. At present, zenith scans should be made using only a single channel.
+**channels** - Designates the channel or channels of the data scan files that will be used for analysis. At present, elevation scans should be made using only a single channel.
 
 _Format examples:_
 > 1
@@ -44,7 +44,7 @@ _Format examples:_
 
 > 1_2_3_4
 
-**is_scan** - Designates whether the files present in the folder should be considered as parts of a scan profile, either azimuth or zenith. If set to zenith, the cartesian extinction profile is calculated and visibility ranges of incoming and outcoming objects at set positions for that azimuth angle become available.
+**is_scan** - Designates whether the files present in the folder should be considered as parts of a scan profile, either azimuth or elevation. If set to elevation, the cartesian extinction profile is calculated and visibility ranges of incoming and outcoming objects at set positions for that azimuth angle become available.
 
 _Format:_
 > TRUE
@@ -56,7 +56,7 @@ _Format:_
 _Format:_
 > azimuth
 
-> zenith
+> elevation
 
 **model** - Designates the atmospheric model used for the translation of extinction coefficients from 1054 nm to the visible part of the spectrum. If set to null, no conversion is carried out and the results correspond to visibility ranges for 1054 nm.
 
@@ -67,19 +67,19 @@ _Format:_
 
 > urban-rural
 
-**incoming** - If _is_scan_ is set to TRUE and _model_ is set to zenith, it designates whether the object of interest is incoming (TRUE) or outcoming (FALSE).
+**incoming** - If _is_scan_ is set to TRUE and _model_ is set to elevation, it designates whether the object of interest is incoming (TRUE) or outcoming (FALSE).
 
 _Format:_
 > TRUE
 
 > FALSE
 
-**height** - If _is_scan_ is set to TRUE and _model_ is set to zenith, it designates the height of the object of interest (in metres).
+**height** - If _is_scan_ is set to TRUE and _model_ is set to elevation, it designates the height of the object of interest (in metres).
 
 _Format examle:_
 > 4500
 
-**distance** - If _is_scan_ is set to TRUE and _model_ is set to zenith, it designates the distance of the object of interest (in metres).
+**distance** - If _is_scan_ is set to TRUE and _model_ is set to elevation, it designates the distance of the object of interest (in metres).
 
 _Format example:_
 > 3000
@@ -105,6 +105,6 @@ _Format_
 
 **Radial outward visibility distance** - Teb-delimited text file containing the calculated radial visibility ranges for all channels and all files designated as part of the analysis. It is specific to the atmospheric _model_ used.
 
-**Cartesian extinction profile** - Tab-delimited text file containing the extension of the radial extinction coefficient profile to cartesial coordinates. Due to its potentially great size, it is gz-compressed upon creation. **Only available for zenith scans.** It is specific to the atmospheric _model_ used.
+**Cartesian extinction profile** - Tab-delimited text file containing the extension of the radial extinction coefficient profile to cartesial coordinates. Due to its potentially great size, it is gz-compressed upon creation. **Only available for elevation scans.** It is specific to the atmospheric _model_ used.
 
-**Incoming/Outcoming object visibility** - Tab-delimited text file containing visibility ranges of an incoming or outcoming object (respectively) at a set height and distance from the LIDAR location. Incoming/outcoming status, height and distance are supplied by the user and the file is overwritten after each query. **Only available for zenith scans.** It is specific to the atmospheric _model_ used.
+**Incoming/Outcoming object visibility** - Tab-delimited text file containing visibility ranges of an incoming or outcoming object (respectively) at a set height and distance from the LIDAR location. Incoming/outcoming status, height and distance are supplied by the user and the file is overwritten after each query. **Only available for elevation scans.** It is specific to the atmospheric _model_ used.
