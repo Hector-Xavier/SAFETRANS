@@ -190,7 +190,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
     close(progress)
   headers <- c()
   for (i in 1:length(file_list))
-    headers <- c(headers,paste(rep(paste("Zenith",-as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=1,nrows=1,fill=TRUE)[9]),"Azimuth",(as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=1,nrows=1,fill=TRUE)[10])+as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=2,nrows=1,fill=TRUE))[7])%%360,sep="_"),length(measurements_of_interest)),measurements_of_interest,sep="_"))
+    headers <- c(headers,paste(rep(paste("Elevation",-as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=1,nrows=1,fill=TRUE)[9]),"Azimuth",(as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=1,nrows=1,fill=TRUE)[10])+as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=2,nrows=1,fill=TRUE))[7])%%360,sep="_"),length(measurements_of_interest)),measurements_of_interest,sep="_"))
   colnames(data) <- headers
   rownames(data) <- as.character(seq(dim(data)[1])*bin_width)
   if(output_file)
