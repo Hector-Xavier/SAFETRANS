@@ -47,10 +47,10 @@ if (!is_scan)
   radial_visibility_profile(extinction_profile=scanning_profile_extinction(directory,channels,is_scan,1,verbose,output),is_scan,model,wavelength,output,verbose)
 } else {
   message("Processing measurements as a set of ",scan_type," measurements.")
-  if (file.exists("Radial_extinction_coefficients_1064_nm.txt"))
+  if (file.exists(paste("Radial_extinction_coefficients",wavelength,"nm.txt",sep="_")))
   {
     message("Radial extinction coefficent profile present. Loading data...")
-    extinction <- read.table(file="Radial_extinction_coefficients_1064_nm.txt",header=TRUE,quote="")
+    extinction <- read.table(file=paste("Radial_extinction_coefficients",wavelength,"nm.txt",sep="_"),header=TRUE,quote="")
   } else {
     if (!verbose)
       message("Importing data and calculating the radial extinction coefficent profile.")
