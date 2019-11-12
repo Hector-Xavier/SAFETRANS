@@ -12,13 +12,13 @@ Docker creation (requires "Docker"):
 
 Container deployment:
 **Deployment example**
-> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R 1 FALSE azimuth null FALSE null null TRUE TRUE
+> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R 1 FALSE azimuth null 355 FALSE null null TRUE TRUE
 
 **"Silent" deployment example**
-> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R 1 FALSE azimuth null FALSE null null TRUE TRUE > /dev/null
+> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R 1 FALSE azimuth null 355 FALSE null null TRUE TRUE > /dev/null
 
 **Explicit form of arguments**
-> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R channels is_scan scan_type model incoming height distance output verbose
+> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R channels is_scan scan_type model wavelength incoming height distance output verbose
 
 **Granting user access to newly-created files**
 > sudo chown -R $(id -u) your/LIDAR/scan/folder/Output
@@ -67,6 +67,15 @@ _Format:_
 
 > urban-rural
 
+**wavelength** - Designates the lidar wavelength, so that visibility ranges can be calculated for the visible part of the spectrum (at 550 nm). Currently, the tool supports only 355 nm, 1064 nm and 1550 nm.
+
+_Format_
+> 355
+
+> 1064
+
+> 1550
+
 **incoming** - If _is_scan_ is set to TRUE and _model_ is set to elevation, it designates whether the object of interest is incoming (TRUE) or outcoming (FALSE).
 
 _Format:_
@@ -103,8 +112,8 @@ _Format_
 
 **Radial_extinction_coefficients_1054_nm.txt** - Tab-delimited text file containing the calculated extinction coefficients for all channels and all files designated as part of the analysis. If repeaded queries are made concerning the same initial data, it is read to reduce answer calculation delay.
 
-**Radial outward visibility distance** - Teb-delimited text file containing the calculated radial visibility ranges for all channels and all files designated as part of the analysis. It is specific to the atmospheric _model_ used.
+**Radial outward visibility distance** - Teb-delimited text file containing the calculated radial visibility ranges for all channels and all files designated as part of the analysis. It is specific to the _wavelength_ and atmospheric _model_ specified.
 
-**Cartesian extinction profile** - Tab-delimited text file containing the extension of the radial extinction coefficient profile to cartesial coordinates. Due to its potentially great size, it is gz-compressed upon creation. **Only available for elevation scans.** It is specific to the atmospheric _model_ used.
+**Cartesian extinction profile** - Tab-delimited text file containing the extension of the radial extinction coefficient profile to cartesial coordinates. Due to its potentially great size, it is gz-compressed upon creation. **Only available for elevation scans.** It is specific to the _wavelength_ and atmospheric _model_ specified.
 
-**Incoming/Outcoming object visibility** - Tab-delimited text file containing visibility ranges of an incoming or outcoming object (respectively) at a set height and distance from the LIDAR location. Incoming/outcoming status, height and distance are supplied by the user and the file is overwritten after each query. **Only available for elevation scans.** It is specific to the atmospheric _model_ used.
+**Incoming/Outcoming object visibility** - Tab-delimited text file containing visibility ranges of an incoming or outcoming object (respectively) at a set height and distance from the LIDAR location. Incoming/outcoming status, height and distance are supplied by the user and the file is overwritten after each query. **Only available for elevation scans.** It is specific to the _wavelength_ and atmospheric _model_ specified.
