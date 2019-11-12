@@ -198,7 +198,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   return(data)
 }
 
-visibility_range <- function(extinction,bin_width,model=NULL,incoming=FALSE,incoming_range=NULL,verbose=FALSE)
+visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming=FALSE,incoming_range=NULL,verbose=FALSE)
 {
   if (incoming && is.null(incoming_range))
     stop("Please provide the distance of the incoming object in metres.")
@@ -212,12 +212,25 @@ visibility_range <- function(extinction,bin_width,model=NULL,incoming=FALSE,inco
       message("No model selected. Visibility will be calculated at 1064 nm.")
     }
   }
-  if (!is.null(model))
+  if (wavelength==355)
   {
-    if (model=="urban-rural")
-      extinction <- (extinction/0.503)^(1/1.08)
-    if (model=="maritime")
-      extinction <- (extinction/0.983)^(1/1.16)
+    #to be implemented
+  } else if (wavelength==1064) {
+    if (!is.null(model))
+    {
+      if (model=="urban-rural")
+        extinction <- (extinction/0.503)^(1/1.08)
+      if (model=="maritime")
+        extinction <- (extinction/0.983)^(1/1.16)      
+    }
+  } else if (wavelength==1550) {
+    if (!is.null(model))
+    {
+      if (model=="urban-rural")
+        extinction <- (extinction/0.314)^(1/1.11)
+      if (model=="maritime")
+        extinction <- (extinction/0.996)^(1/1.20)      
+    }
   }
   visibility <- c()
   if (incoming)
@@ -237,7 +250,7 @@ visibility_range <- function(extinction,bin_width,model=NULL,incoming=FALSE,inco
   }
 }
 
-radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL,output_file=TRUE,verbose=FALSE)
+radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL,wavelength,output_file=TRUE,verbose=FALSE)
 {
   bin_width <- as.numeric(rownames(extinction_profile)[2])-as.numeric(rownames(extinction_profile)[1])
   visibility <- c()
@@ -246,14 +259,14 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
     for (i in 1:dim(extinction_profile)[2])
     {
       message(i,"/",dim(extinction_profile)[2]," - Measurement set designation: ",colnames(extinction_profile)[i])
-      visibility <- c(visibility,visibility_range(extinction=extinction_profile[,i],bin_width,model=model,verbose=TRUE))
+      visibility <- c(visibility,visibility_range(extinction=extinction_profile[,i],bin_width,model=model,wavelength=wavelength,verbose=TRUE))
       message("Outward visibility: ",visibility[i]," m.")
     }
   } else {
     progress <- txtProgressBar(max=dim(extinction_profile)[2],char="=",style=3)
     for (i in 1:dim(extinction_profile)[2])
     {
-      visibility <- c(visibility,visibility_range(extinction=extinction_profile[,i],bin_width,model=model))
+      visibility <- c(visibility,visibility_range(extinction=extinction_profile[,i],bin_width,model=model,wavelength=wavelength))
       setTxtProgressBar(progress,i)
     }
     close(progress)
@@ -299,7 +312,7 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
           model <- NULL
         incoming_vis <- c()
         for (j in seq(6000,1,-50))
-          incoming_vis <- c(incoming_vis,visibility_range(extinction_profile[,i],bin_width,model,incoming=TRUE,incoming_range=j*bin_width,verbose=FALSE))
+          incoming_vis <- c(incoming_vis,visibility_range(extinction_profile[,i],bin_width,model,wavelength,incoming=TRUE,incoming_range=j*bin_width,verbose=FALSE))
         if (is.null(model))
           model <- "no_model"
         png(file=file.path(paste(paste(getwd(),"Azimuth_visibility_plots",paste("Incoming_visibilities",model,sep="_"),sep="/"),paste("Visibility_",rownames(visibility)[i],".png", sep = ""),sep="/")),width=2000,height=1600)
@@ -320,7 +333,7 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
   return(visibility)
 }
 
-cartesian_visibility_profile <- function(extinction_profile,model=NULL,incoming=FALSE,incoming_distance=NULL,incoming_height=NULL,output_files=TRUE,verbose=TRUE)
+cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelength,incoming=FALSE,incoming_distance=NULL,incoming_height=NULL,output_files=TRUE,verbose=TRUE)
 {
   if (incoming && (is.null(incoming_distance) || is.null(incoming_height)))
     stop("Please designate both the height and the distance of the incoming object.")
@@ -387,16 +400,16 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,incoming=
   {
     if(incoming)
     {
-      horizontal_visibility <- visibility_range(extinction=cartesian_profile[ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)],bin_width,model,incoming,incoming_distance,verbose)
+      horizontal_visibility <- visibility_range(extinction=cartesian_profile[ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)],bin_width,model,wavelength,incoming,incoming_distance,verbose)
     } else {
-      horizontal_visibility <- visibility_range(extinction=c(cartesian_profile[ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width):dim(cartesian_profile)[2]],rep(cartesian_profile[ceiling(incoming_height/bin_width),dim(cartesian_profile)[2]],ceiling(20000/bin_width))),bin_width,model,incoming,incoming_distance,verbose)
+      horizontal_visibility <- visibility_range(extinction=c(cartesian_profile[ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width):dim(cartesian_profile)[2]],rep(cartesian_profile[ceiling(incoming_height/bin_width),dim(cartesian_profile)[2]],ceiling(20000/bin_width))),bin_width,model,wavelength,incoming,incoming_distance,verbose)
     }
-    vertical_visibility <- visibility_range(extinction=cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)],bin_width,model,incoming=TRUE,incoming_height,verbose=FALSE)
+    vertical_visibility <- visibility_range(extinction=cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)],bin_width,model,wavelength,incoming=TRUE,incoming_height,verbose=FALSE)
     if (vertical_visibility < incoming_height)
     {
       slant_visibility <- "No optical contact between object and ground. Slant visibility unavailable."
     } else {
-      pseudo_visibility <- visibility_range(extinction=c(rep(cartesian_profile[1,ceiling(incoming_distance/bin_width)],maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)
+      pseudo_visibility <- visibility_range(extinction=c(rep(cartesian_profile[1,ceiling(incoming_distance/bin_width)],maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)
       slant_visibility <- ceiling(sqrt(pseudo_visibility^2 - incoming_height^2))
     }
     if (verbose | (!verbose && !output_files))
