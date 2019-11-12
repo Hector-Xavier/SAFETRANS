@@ -12,4 +12,4 @@ ADD SAFETRANS_visibility_module.R /home/SAFETRANS/SAFETRANS_visibility_module.R
 ADD scripta.R /home/SAFETRANS/scripta.R
 WORKDIR /home/SAFETRANS
 
-CMD Rscript SAFETRANS_visibility_module.R 1 FALSE azimuth null FALSE null null TRUE TRUE
+CMD Rscript SAFETRANS_visibility_module.R 1 FALSE azimuth null 355 FALSE null null TRUE TRUE
