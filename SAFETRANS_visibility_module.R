@@ -13,21 +13,24 @@ if (arguments[4]!="null")
 if (!is.null(model))
   if (sum(model==c("urban-rural","maritime"))==0)
     stop("Incorrect model designation. Correct designations are: urban-rural, maritime, null")
-incoming <- as.logical(arguments[5])
-if (arguments[6]!="null")
+wavelength <- as.integer(arguments[5])
+if (sum(wavelength==c(355,1064,1550))==0)
+  stop("Incorrect lidar wavelength designation. Supported wavelengths (in nm): 355, 1064, 1550")
+incoming <- as.logical(arguments[6])
+if (arguments[7]!="null")
 {
-  height <- as.numeric(arguments[6])
+  height <- as.numeric(arguments[7])
 } else {
   height <- NULL
 }
-if (arguments[7]!="null")
+if (arguments[8]!="null")
 {
-  distance <- as.numeric(arguments[7])
+  distance <- as.numeric(arguments[8])
 } else {
   distance <- NULL
 }
-output <- as.logical(arguments[8])
-verbose <- as.logical(arguments[9])
+output <- as.logical(arguments[9])
+verbose <- as.logical(arguments[10])
 
 source("scripta.R")
 directory <- "/data"
@@ -41,7 +44,7 @@ if (output)
 
 if (!is_scan)
 {
-  radial_visibility_profile(extinction_profile=scanning_profile_extinction(directory,channels,is_scan,1,verbose,output),is_scan,model,output,verbose)
+  radial_visibility_profile(extinction_profile=scanning_profile_extinction(directory,channels,is_scan,1,verbose,output),is_scan,model,wavelength,output,verbose)
 } else {
   message("Processing measurements as a set of ",scan_type," measurements.")
   if (file.exists("Radial_extinction_coefficients_1064_nm.txt"))
@@ -57,11 +60,11 @@ if (!is_scan)
   {
     if (!verbose)
       message("Calculating the radial visibility profile.")
-    radial_visibility_profile(extinction,is_scan,model,output,verbose)
+    radial_visibility_profile(extinction,is_scan,model,wavelength,output,verbose)
   } else {
     message("Extending radial extinction profile to cartesian coordinate system.")
     if (!is.null(height) && !is.null(distance))
       message("Calculating visibility ranges of ",c("outcoming","incoming")[as.integer(incoming)+1]," object.")
-    cartesian_visibility_profile(extinction,model,incoming,distance,height,output,verbose)
+    cartesian_visibility_profile(extinction,model,wavelength,incoming,distance,height,output,verbose)
   }
 }
