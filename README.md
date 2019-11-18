@@ -12,13 +12,13 @@ Docker creation (requires "Docker"):
 
 Container deployment:
 **Deployment example**
-> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R 1 FALSE azimuth null 355 FALSE null null TRUE TRUE
+> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript Visibility.R 1 FALSE azimuth null 355 FALSE null null TRUE TRUE
 
 **"Silent" deployment example**
-> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R 1 FALSE azimuth null 355 FALSE null null TRUE TRUE > /dev/null
+> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript Visibility.R 1 FALSE azimuth null 355 FALSE null null TRUE TRUE > /dev/null
 
 **Explicit form of arguments**
-> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript SAFETRANS_visibility_module.R channels is_scan scan_type model wavelength incoming height distance output verbose
+> docker run --rm -v /your/LIDAR/scan/folder:/data safetrans Rscript Visibility.R channels is_scan scan_type model wavelength incoming height distance output verbose
 
 **Granting user access to newly-created files**
 > sudo chown -R $(id -u) your/LIDAR/scan/folder/Output
@@ -31,7 +31,7 @@ Container deployment:
 
 **safetrans** - The docker image ID, or its more human-readable _tag_, specified during creation.
 
-**Rscript SAFETRANS_visibility_module.R** - Do not change: points to the script performing the analysis.
+**Rscript Visibility.R** - Do not change: points to the script performing the analysis.
 
 **channels** - Designates the channel or channels of the data scan files that will be used for analysis. At present, elevation scans should be made using only a single channel.
 
