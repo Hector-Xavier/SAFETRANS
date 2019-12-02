@@ -269,13 +269,11 @@ angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar
   }
   
   starting_wavelength <- as.integer(rownames(optical_depth_data)[wavelengths[1]])
-  message(starting_wavelength)
   if (lidar_wavelength==1064)
     wavelengths <- wavelengths + 1
   lidar_optical_depth <- as.numeric(optical_depth_data[wavelengths[1],])*(lidar_wavelength/starting_wavelength)^(log(as.numeric(optical_depth_data[wavelengths[2],]/optical_depth_data[wavelengths[1],]))/log(as.integer(rownames(optical_depth_data)[wavelengths[2]])/lidar_wavelength))
   
   wavelengths <- c(4,5)
-  message(as.integer(rownames(optical_depth_data)[wavelengths[1]]))
   visible_optical_depth <- as.numeric(optical_depth_data[wavelengths[1],])*(550/as.integer(rownames(optical_depth_data)[wavelengths[1]]))^(log(as.numeric(optical_depth_data[wavelengths[2],]/optical_depth_data[wavelengths[1],]))/log(as.integer(rownames(optical_depth_data)[wavelengths[2]])/550))
   
   coefficient <- mean((550/lidar_wavelength)^(log(visible_optical_depth/lidar_optical_depth)/log(550/lidar_wavelength)))
