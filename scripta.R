@@ -214,14 +214,16 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
   }
   if (wavelength==355)
   {
-    #to be implemented
+    extinction <- angstrom_exponent_extinction_coefficient_conversion(extinction,wavelength)
   } else if (wavelength==1064) {
     if (!is.null(model))
     {
       if (model=="urban-rural")
         extinction <- (extinction/0.503)^(1/1.08)
       if (model=="maritime")
-        extinction <- (extinction/0.983)^(1/1.16)      
+        extinction <- (extinction/0.983)^(1/1.16)
+      if (model=="angstrom_exponent")
+        extinction <- angstrom_exponent_extinction_coefficient_conversion(extinction,wavelength)
     }
   } else if (wavelength==1550) {
     if (!is.null(model))
@@ -229,7 +231,9 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
       if (model=="urban-rural")
         extinction <- (extinction/0.314)^(1/1.11)
       if (model=="maritime")
-        extinction <- (extinction/0.996)^(1/1.20)      
+        extinction <- (extinction/0.996)^(1/1.20)
+      if (model=="angstrom_exponent")
+        extinction <- angstrom_exponent_extinction_coefficient_conversion(extinction,wavelength)
     }
   }
   visibility <- c()
@@ -248,6 +252,35 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
       visibility <- c(visibility,sum(extinction[1:i]*bin_width))
     return(length(visibility[visibility<=3])*bin_width)
   }
+}
+  
+angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar_wavelength)
+{
+  optical_depth_data <- read.table("AERONET_data.txt",header=TRUE,sep="\t")
+  optical_depths_data <- optical_depths_data[,!is.na(colSums(optical_depths_data))]
+  
+  if (lidar_wavelength==355)
+  {
+    wavelengths <- c(1,2)
+  } else if (lidar_wavelength==1064) {
+    wavelengths <- c(6,7)
+  } else if (lidar_wavelength==1550) {
+    wavelengths <- c(7,6)
+  }
+  
+  starting_wavelength <- as.integer(rownames(optical_depth_data)[wavelengths[1]])
+  message(starting_wavelength)
+  if (lidar_wavelength==1064)
+    wavelengths <- wavelengths + 1
+  lidar_optical_depth <- as.numeric(optical_depth_data[wavelengths[1],])*(lidar_wavelength/starting_wavelength)^(log(as.numeric(optical_depth_data[wavelengths[2],]/optical_depth_data[wavelengths[1],]))/log(as.integer(rownames(optical_depth_data)[wavelengths[2]])/lidar_wavelength))
+  
+  wavelengths <- c(4,5)
+  message(as.integer(rownames(optical_depth_data)[wavelengths[1]]))
+  visible_optical_depth <- as.numeric(optical_depth_data[wavelengths[1],])*(550/as.integer(rownames(optical_depth_data)[wavelengths[1]]))^(log(as.numeric(optical_depth_data[wavelengths[2],]/optical_depth_data[wavelengths[1],]))/log(as.integer(rownames(optical_depth_data)[wavelengths[2]])/550))
+  
+  coefficient <- mean((550/lidar_wavelength)^(log(visible_optical_depth/lidar_optical_depth)/log(550/lidar_wavelength)))
+  
+  return(extinction*coefficient)
 }
 
 radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL,wavelength,output_file=TRUE,verbose=FALSE)
