@@ -11,8 +11,8 @@ if (arguments[4]!="null")
   model <- NULL
 }
 if (!is.null(model))
-  if (sum(model==c("urban-rural","maritime","all"))==0)
-    stop("Incorrect model designation. Correct designations are: urban-rural, maritime, null, all")
+  if (sum(model==c("urban-rural","maritime","angstrom_exponent","all"))==0)
+    stop("Incorrect model designation. Correct designations are: urban-rural, maritime, angstrom_exponent, null, all")
 wavelength <- as.integer(arguments[5])
 if (sum(wavelength==c(355,1064,1550))==0)
   stop("Incorrect lidar wavelength designation. Supported wavelengths (in nm): 355, 1064, 1550")
@@ -65,6 +65,7 @@ if (!is_scan)
       radial_visibility_profile(extinction,is_scan,NULL,wavelength,output,verbose)
       radial_visibility_profile(extinction,is_scan,"maritime",wavelength,output,verbose)
       radial_visibility_profile(extinction,is_scan,"urban-rural",wavelength,output,verbose)
+      radial_visibility_profile(extinction,is_scan,"angstrom_exponent",wavelength,output,verbose)
     } else {
       radial_visibility_profile(extinction,is_scan,model,wavelength,output,verbose)
     }
@@ -77,6 +78,7 @@ if (!is_scan)
       cartesian_visibility_profile(extinction,NULL,wavelength,incoming,distance,height,output,verbose)
       cartesian_visibility_profile(extinction,"maritime",wavelength,incoming,distance,height,output,verbose)
       cartesian_visibility_profile(extinction,"urban-rural",wavelength,incoming,distance,height,output,verbose)
+      cartesian_visibility_profile(extinction,"angstrom_exponent",wavelength,incoming,distance,height,output,verbose)
     } else {
       cartesian_visibility_profile(extinction,model,wavelength,incoming,distance,height,output,verbose)
     }
