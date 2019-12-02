@@ -256,7 +256,7 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
   
 angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar_wavelength)
 {
-  optical_depth_data <- read.table("AERONET_data.txt",header=TRUE,sep="\t")
+  optical_depth_data <- read.table("/home/SAFETRANS/AERONET_data.txt",header=TRUE,sep="\t")
   optical_depths_data <- optical_depths_data[,!is.na(colSums(optical_depths_data))]
   
   if (lidar_wavelength==355)
