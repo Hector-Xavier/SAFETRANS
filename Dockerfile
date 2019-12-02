@@ -10,6 +10,7 @@ RUN mkdir /data
 RUN mkdir /home/SAFETRANS
 ADD Visibility.R /home/SAFETRANS/Visibility.R
 ADD scripta.R /home/SAFETRANS/scripta.R
+ADD AERONET_data.txt /home/SAFETRANS/AERONET_data.txt.R
 WORKDIR /home/SAFETRANS
 
 CMD Rscript Visibility.R 1 FALSE azimuth null 355 FALSE null null TRUE TRUE
