@@ -63,8 +63,11 @@ if (!is_scan)
     if (model=="all")
     {
       radial_visibility_profile(extinction,is_scan,NULL,wavelength,output,verbose)
-      radial_visibility_profile(extinction,is_scan,"maritime",wavelength,output,verbose)
-      radial_visibility_profile(extinction,is_scan,"urban-rural",wavelength,output,verbose)
+      if (wavelength!=355)
+      {
+        radial_visibility_profile(extinction,is_scan,"maritime",wavelength,output,verbose)
+        radial_visibility_profile(extinction,is_scan,"urban-rural",wavelength,output,verbose)
+      }
       radial_visibility_profile(extinction,is_scan,"angstrom_exponent",wavelength,output,verbose)
     } else {
       radial_visibility_profile(extinction,is_scan,model,wavelength,output,verbose)
@@ -76,8 +79,11 @@ if (!is_scan)
     if (model=="all")
     {
       cartesian_visibility_profile(extinction,NULL,wavelength,incoming,distance,height,output,verbose)
+      if (wavelength!=355)
+      {
       cartesian_visibility_profile(extinction,"maritime",wavelength,incoming,distance,height,output,verbose)
       cartesian_visibility_profile(extinction,"urban-rural",wavelength,incoming,distance,height,output,verbose)
+      }
       cartesian_visibility_profile(extinction,"angstrom_exponent",wavelength,incoming,distance,height,output,verbose)
     } else {
       cartesian_visibility_profile(extinction,model,wavelength,incoming,distance,height,output,verbose)
