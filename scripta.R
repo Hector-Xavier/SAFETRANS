@@ -413,8 +413,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
         cartesian_profile[i,] <- cartesian_profile[non_zero,]
       } else {
         hold_the_door <- c(hold_the_door,i)
-      }
-      
+      }      
     } else {
       non_zero <- i
       if (length(hold_the_door)>0)
