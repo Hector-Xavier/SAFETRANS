@@ -16,6 +16,8 @@ if (!is.null(model))
 wavelength <- as.integer(arguments[5])
 if (sum(wavelength==c(355,1064,1550))==0)
   stop("Incorrect lidar wavelength designation. Supported wavelengths (in nm): 355, 1064, 1550")
+if (sum(model==c("urban-rural","maritime"))==1 && wavelength==355)
+    stop("Empirical conversion available only for infrared wavelengths. Acceptable model designations for 355 nm: angstrom_exponent, null, all")
 incoming <- as.logical(arguments[6])
 if (arguments[7]!="null")
 {
