@@ -214,7 +214,8 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
   }
   if (wavelength==355)
   {
-    extinction <- angstrom_exponent_extinction_coefficient_conversion(extinction,wavelength)
+    if (!is.null(model))
+      extinction <- angstrom_exponent_extinction_coefficient_conversion(extinction,wavelength)
   } else if (wavelength==1064) {
     if (!is.null(model))
     {
@@ -257,8 +258,7 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
 angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar_wavelength)
 {
   optical_depth_data <- read.table("/home/SAFETRANS/AERONET_data.txt",header=TRUE,sep="\t")
-  optical_depth_data <- optical_depth_data[,!is.na(colSums(optical_depth_data))]
-  
+  optical_depth_data <- optical_depth_data[,!is.na(colSums(optical_depth_data))]  
   if (lidar_wavelength==355)
   {
     wavelengths <- c(1,2)
@@ -266,18 +266,14 @@ angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar
     wavelengths <- c(6,7)
   } else if (lidar_wavelength==1550) {
     wavelengths <- c(7,6)
-  }
-  
+  }  
   starting_wavelength <- as.integer(rownames(optical_depth_data)[wavelengths[1]])
   if (lidar_wavelength==1064)
     wavelengths <- wavelengths + 1
   lidar_optical_depth <- as.numeric(optical_depth_data[wavelengths[1],])*(lidar_wavelength/starting_wavelength)^(log(as.numeric(optical_depth_data[wavelengths[2],]/optical_depth_data[wavelengths[1],]))/log(as.integer(rownames(optical_depth_data)[wavelengths[2]])/lidar_wavelength))
-  
   wavelengths <- c(4,5)
   visible_optical_depth <- as.numeric(optical_depth_data[wavelengths[1],])*(550/as.integer(rownames(optical_depth_data)[wavelengths[1]]))^(log(as.numeric(optical_depth_data[wavelengths[2],]/optical_depth_data[wavelengths[1],]))/log(as.integer(rownames(optical_depth_data)[wavelengths[2]])/550))
-  
   coefficient <- mean((550/lidar_wavelength)^(log(visible_optical_depth/lidar_optical_depth)/log(550/lidar_wavelength)))
-  
   return(extinction*coefficient)
 }
 
