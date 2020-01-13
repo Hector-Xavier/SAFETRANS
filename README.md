@@ -58,7 +58,7 @@ _Format:_
 
 > elevation
 
-**model** - Designates the atmospheric model used for the translation of extinction coefficients from 1054 nm to the visible part of the spectrum. If set to null, no conversion is carried out and the results correspond to visibility ranges for 1054 nm.
+**model** - Designates the atmospheric model used for the translation of extinction coefficients from 355 nm, 1054 nm or 1550 nm to the visible part of the spectrum. If set to null, no conversion is carried out and the results correspond to visibility ranges for the seleted wavelength. Maritime and Urban-rural empirical models are supported for infrared wavelengths only. 
 
 _Format:_
 > null
@@ -66,6 +66,10 @@ _Format:_
 > maritime
 
 > urban-rural
+
+> angstrom_exponent
+
+> all
 
 **wavelength** - Designates the lidar wavelength, so that visibility ranges can be calculated for the visible part of the spectrum (at 550 nm). Currently, the tool supports only 355 nm, 1064 nm and 1550 nm.
 
