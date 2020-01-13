@@ -62,7 +62,7 @@ if (!is_scan)
   {
     if (!verbose)
       message("Calculating the radial visibility profile.")
-    if (model=="all")
+    if (!is.null(model) && model=="all")
     {
       radial_visibility_profile(extinction,is_scan,NULL,wavelength,output,verbose)
       if (wavelength!=355)
@@ -78,7 +78,7 @@ if (!is_scan)
     message("Extending radial extinction profile to cartesian coordinate system.")
     if (!is.null(height) && !is.null(distance))
       message("Calculating visibility ranges of ",c("outcoming","incoming")[as.integer(incoming)+1]," object.")
-    if (model=="all")
+    if (!is.null(model) && model=="all")
     {
       cartesian_visibility_profile(extinction,NULL,wavelength,incoming,distance,height,output,verbose)
       if (wavelength!=355)
