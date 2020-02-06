@@ -226,7 +226,7 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
       if (model=="angstrom_exponent")
         extinction <- angstrom_exponent_extinction_coefficient_conversion(extinction,wavelength)
     }
-  } else if (wavelength==1550) {
+  } else if (wavelength==1550 | wavelength==1570) {
     if (!is.null(model))
     {
       if (model=="urban-rural")
@@ -264,7 +264,7 @@ angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar
     wavelengths <- c(1,2)
   } else if (lidar_wavelength==1064) {
     wavelengths <- c(6,7)
-  } else if (lidar_wavelength==1550) {
+  } else if (lidar_wavelength==1550 | lidar_wavelength==1570) {
     wavelengths <- c(7,6)
   }  
   starting_wavelength <- as.integer(rownames(optical_depth_data)[wavelengths[1]])
@@ -357,7 +357,7 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
       message("Radial visibility plots for atmospheric model '",model,"' already exist. Calculation & creation skipped.") 
     }
   }
-  return(visibility)
+  #return(visibility)
 }
 
 cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelength,incoming=FALSE,incoming_distance=NULL,incoming_height=NULL,output_files=TRUE,verbose=TRUE)
@@ -431,7 +431,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       horizontal_visibility <- visibility_range(extinction=c(cartesian_profile[ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width):dim(cartesian_profile)[2]],rep(cartesian_profile[ceiling(incoming_height/bin_width),dim(cartesian_profile)[2]],ceiling(20000/bin_width))),bin_width,model,wavelength,incoming,incoming_distance,verbose)
     }
     vertical_visibility <- visibility_range(extinction=cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)],bin_width,model,wavelength,incoming=TRUE,incoming_height,verbose=FALSE)
-    if (vertical_visibility < incoming_height)
+    if (vertical_visibility <= incoming_height)
     {
       slant_visibility <- "No optical contact between object and ground. Slant visibility unavailable."
     } else {
@@ -451,7 +451,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       } else {
         message("Horizontal visibility of outcoming object at a height of ",incoming_height," m and distance of ",incoming_distance," m: ",horizontal_visibility," m.")
       }
-      if (vertical_visibility < incoming_height)
+      if (vertical_visibility <= incoming_height)
       {
         message("Vertical visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",vertical_visibility," m.")
         message(slant_visibility)
