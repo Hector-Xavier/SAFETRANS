@@ -71,7 +71,7 @@ _Format:_
 
 > all
 
-**wavelength** - Designates the lidar wavelength, so that visibility ranges can be calculated for the visible part of the spectrum (at 550 nm). Currently, the tool supports only 355 nm, 1064 nm and 1550 nm.
+**wavelength** - Designates the lidar wavelength, so that visibility ranges can be calculated for the visible part of the spectrum (at 550 nm). Currently, the tool supports only 355 nm, 1064 nm, 1550 nm and 1570 nm.
 
 _Format_
 > 355
@@ -79,6 +79,8 @@ _Format_
 > 1064
 
 > 1550
+
+> 1570
 
 **incoming** - If _is_scan_ is set to TRUE and _model_ is set to elevation, it designates whether the object of interest is incoming (TRUE) or outcoming (FALSE).
 
