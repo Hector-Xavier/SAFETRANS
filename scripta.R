@@ -432,7 +432,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
     }
     vertical_visibility <- visibility_range(extinction=cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)],bin_width,model,wavelength,incoming=TRUE,incoming_height,verbose=FALSE)
     #if (vertical_visibility <= incoming_height)
-    if(is.null(vertical_visibility[2])
+    if(is.null(vertical_visibility[2]))
     {
       slant_visibility <- "No optical contact between object and ground. Slant visibility unavailable."
     } else {
