@@ -435,7 +435,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
     if (vertical_visibility[1] < incoming_height)    
     {
       slant_visibility <- "No optical contact between object and ground. Slant visibility unavailable."
-      minimum_pseudo_visibility <- "No optical contact between object and ground. Minimum slant visibility unavailable."
+      minimum_slant_visibility <- "No optical contact between object and ground. Minimum slant visibility unavailable."
       homogeneous_slant_visibility <- "No optical contact between object and ground. Homogeneous slant visibility unavailable."
     } else {
       pseudo_visibility <- visibility_range(extinction=c(rep(median(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)[1]
