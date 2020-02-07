@@ -461,7 +461,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       {
         message("Vertical visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",vertical_visibility[1]," m.")
         message(slant_visibility)
-        message(minimum_pseudo_visibility)
+        message(minimum_slant_visibility)
         message(homogeneous_slant_visibility)
       } else {
         message(c("Outcoming","Incoming")[as.integer(incoming)+1]," object at a height of ",incoming_height," m and distance of ",incoming_distance," m has optical contact with ground.")
