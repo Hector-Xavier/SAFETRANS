@@ -436,7 +436,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
     {
       slant_visibility <- "No optical contact between object and ground. Slant visibility unavailable."
     } else {
-      pseudo_visibility <- visibility_range(extinction=c(rep(cartesian_profile[1,ceiling(incoming_distance/bin_width)],maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)
+      pseudo_visibility <- visibility_range(extinction=c(rep(cartesian_profile[1,ceiling(incoming_distance/bin_width)],maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)[1]
       homogeneous_slant_visibility <- floor(incoming_height * sin(acos(vertical_visibility[2]/3)))
       slant_visibility <- ceiling(sqrt(pseudo_visibility^2 - incoming_height^2))
     }
@@ -455,7 +455,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       }
       if (vertical_visibility[1] < incoming_height)
       {
-        message("Vertical visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",vertical_visibility," m.")
+        message("Vertical visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",vertical_visibility[1]," m.")
         message(slant_visibility)
       } else {
         message(c("Outcoming","Incoming")[as.integer(incoming)+1]," object at a height of ",incoming_height," m and distance of ",incoming_distance," m has optical contact with ground.")
