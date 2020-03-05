@@ -404,7 +404,16 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
   close(progress)
   non_zero <- seq(dim(cartesian_profile)[1])[rowSums(cartesian_profile)==0][1]-1
   hold_the_door <- c()
-  for (i in seq(dim(cartesian_profile)[1])[rowSums(cartesian_profile)==0][1]:(seq(dim(cartesian_profile)[1])[rowSums(cartesian_profile)==0][sum(rowSums(cartesian_profile)==0)]+1))
+  if (sum(rowSums(cartesian_profile)==0)==1)
+  {
+    if (seq(dim(cartesian_profile)[1])[rowSums(cartesian_profile)==0][1]==dim(cartesian_profile)[1])
+    {
+      non_zero <- non_zero <- seq(dim(cartesian_profile)[1])[rowSums(cartesian_profile)==0][1]-1
+    } else {
+      non_zero <- seq(dim(cartesian_profile)[1])[rowSums(cartesian_profile)==0][1]+1
+    }
+  }
+  for (i in seq(dim(cartesian_profile)[1])[rowSums(cartesian_profile)==0][1]:(seq(dim(cartesian_profile)[1])[rowSums(cartesian_profile)==0][sum(rowSums(cartesian_profile)==0)]))
   {
     if (sum(cartesian_profile[i,])==0)
     {
@@ -413,14 +422,14 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
         cartesian_profile[i,] <- cartesian_profile[non_zero,]
       } else {
         hold_the_door <- c(hold_the_door,i)
-      }      
+      }     
     } else {
       non_zero <- i
       if (length(hold_the_door)>0)
         for (j in 1:length(hold_the_door))
           cartesian_profile[hold_the_door[j],] <- cartesian_profile[i,]
         hold_the_door <- c()
-    }  
+    }
   }
   if (!is.null(incoming_height) && !is.null(incoming_distance))
   {
