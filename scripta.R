@@ -61,6 +61,8 @@ upper_atmosphere_cutoff <- function(data,bin_width,range_offset=0,verbose=FALSE)
   temp_snr <- c()
   for (i in 1:(length(temp_data)-150))
     temp_snr <- c(temp_snr,mean(temp_data[i:(i+150)])/sd(temp_data[i:(i+150)]))
+  if (sum(is.na(temp_snr))>0)
+    temp_snr[is.na(temp_snr)] <- 0
   cutoff <- NULL
   for (i in 1:4000)
     if (sd(temp_snr[i:(i+600)]) < sd(temp_snr[ceiling(37500/bin_width):length(temp_snr)]))
@@ -147,6 +149,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   snr_limit <- 0.05
   file_list <- list.files(scanning_directory)[list.files(scanning_directory)!="Output"]
   temp <- reading_and_preparation(filename=paste(scanning_directory,file_list[1],sep="/"),significant_data_sets=max(measurements_of_interest,2))[,measurements_of_interest]
+  measurement_check <- sum(reading_and_preparation(filename=paste(scanning_directory,file_list[1],sep="/"),significant_data_sets=2)[,2]!=0)/length(temp) >= 0.05
   if (length(measurements_of_interest)==1)
   {
     data <- matrix(ncol=1,nrow=length(temp))
@@ -157,7 +160,16 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   }
   bin_width <- as.numeric(read.table(paste(scanning_directory,file_list[1],sep="/"),skip=4,nrows=1,fill=TRUE)[7])
   for (i in 2:length(file_list))
+  {
     data <- cbind(data,reading_and_preparation(filename=paste(scanning_directory,file_list[i],sep="/"),significant_data_sets=max(measurements_of_interest,2))[,measurements_of_interest])
+    measurement_check <- c(measurement_check,sum(reading_and_preparation(filename=paste(scanning_directory,file_list[i],sep="/"),significant_data_sets=2)[,2]!=0)/dim(data)[1] >= 0.05)
+  }
+  if (sum(!measurement_check)>0)
+  {
+    for (i in 1:sum(!measurement_check))
+      message("WARNING! Measurement set ",file_list[!measurement_check][i]," has less than 5% non-zero measurements. Discarded from analysis.")
+    data <- data[,measurement_check]
+  }
   if (!is_scan)
   {
     message("Processing data as separate measurements.")
@@ -181,7 +193,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   for (i in 1:dim(data)[2])
   {
     if (verbose && (i%%length(measurements_of_interest)==1 || length(measurements_of_interest)==1))
-      message(ceiling(i/length(measurements_of_interest)),"/",length(file_list)," : Processing data file ",file_list[ceiling(i/length(measurements_of_interest))])
+      message(ceiling(i/length(measurements_of_interest)),"/",sum(measurement_check)," : Processing data file ",file_list[measurement_check][ceiling(i/length(measurements_of_interest))])
     data[,i] <- extinction_coefficient(data=data[,i],bin_width,k,verbose)
     if (!verbose)
       setTxtProgressBar(progress,i)
@@ -189,8 +201,8 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   if (!verbose)
     close(progress)
   headers <- c()
-  for (i in 1:length(file_list))
-    headers <- c(headers,paste(rep(paste("Elevation",-as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=1,nrows=1,fill=TRUE)[9]),"Azimuth",(as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=1,nrows=1,fill=TRUE)[10])+as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=2,nrows=1,fill=TRUE))[7])%%360,sep="_"),length(measurements_of_interest)),measurements_of_interest,sep="_"))
+  for (i in 1:length(file_list[measurement_check]))
+    headers <- c(headers,paste(rep(paste("Elevation",-as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[9]),"Azimuth",(as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[10])+as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=2,nrows=1,fill=TRUE))[7])%%360,sep="_"),length(measurements_of_interest)),measurements_of_interest,sep="_"))
   colnames(data) <- headers
   rownames(data) <- as.character(seq(dim(data)[1])*bin_width)
   if(output_file)
@@ -254,7 +266,7 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
     return(length(visibility[visibility<=3])*bin_width)
   }
 }
-  
+
 angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar_wavelength)
 {
   optical_depth_data <- read.table("/home/SAFETRANS/AERONET_data.txt",header=TRUE,sep="\t")
@@ -502,4 +514,5 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
     }
   }
   #return(cartesian_profile)
-}
+} 
+  
