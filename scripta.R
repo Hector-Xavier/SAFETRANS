@@ -133,9 +133,21 @@ extinction_coefficient <- function(data,bin_width,k=1,verbose=FALSE)
     anomalies[length(anomalies)] <- 1
   cutoff <- max(min(seq(length(data))[anomalies==1][1],upper_atmosphere_cutoff(data,bin_width=bin_width)),600)
   indices <- ((cutoff-199):cutoff)[corrected_data[(cutoff-199):cutoff]!=0]
+  if (length(indices)==0)
+    indices <- ((cutoff-299):cutoff)[corrected_data[(cutoff-299):cutoff]!=0]
   signal <- corrected_data[indices]
+  if (length(indices)==1)
+  {
+    signal <- c(signal,signal*1.001)
+    indices <- c(indices,indices+1)
+  }
   coefficient_estimate <- (signal[1:(length(signal)-1)]-signal[2:length(signal)])/(indices[2:length(indices)]-indices[1:(length(indices)-1)])/bin_width/2
-  coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+  if (sum(coefficient_estimate>0)>0)
+  {
+    coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+  } else {
+    coefficient_estimate <- abs(mean(coefficient_estimate))
+  }
   extinction <- exp((corrected_data[min(seq(length(anomalies))[anomalies==1][1],seq(50)[corrected_data[1:50]==max(corrected_data[1:50])]):length(corrected_data)]-mean(signal))/k)
   extinction[extinction<0] <- 0
   integrals <- c()
@@ -166,9 +178,14 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   }
   if (sum(!measurement_check)>0)
   {
-    for (i in 1:sum(!measurement_check))
-      message("WARNING! Measurement set ",file_list[!measurement_check][i]," has less than 5% non-zero measurements. Discarded from analysis.")
-    data <- data[,measurement_check]
+    if (sum(measurement_check)>0)
+    {
+      for (i in 1:sum(!measurement_check))
+        message("WARNING! Measurement set ",file_list[!measurement_check][i]," has less than 5% non-zero measurements. Discarded from analysis.")
+      data <- data[,measurement_check]
+    } else {
+      stop("This measurement set had less than 5% non-zero measurements. Unable to proceed to analysis.")
+    }
   }
   if (!is_scan)
   {
@@ -202,7 +219,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
     close(progress)
   headers <- c()
   for (i in 1:length(file_list[measurement_check]))
-    headers <- c(headers,paste(rep(paste("Elevation",-as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[9]),"Azimuth",(as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[10])+as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=2,nrows=1,fill=TRUE))[7])%%360,sep="_"),length(measurements_of_interest)),measurements_of_interest,sep="_"))
+    headers <- c(headers,paste(rep(paste("Elevation",-as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[9]),"Azimuth",(as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[10])+315)%%360,sep="_"),length(measurements_of_interest)),measurements_of_interest,sep="_"))
   colnames(data) <- headers
   rownames(data) <- as.character(seq(dim(data)[1])*bin_width)
   if(output_file)
@@ -514,5 +531,4 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
     }
   }
   #return(cartesian_profile)
-} 
-  
+}
