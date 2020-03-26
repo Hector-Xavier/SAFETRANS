@@ -135,25 +135,31 @@ extinction_coefficient <- function(data,bin_width,k=1,verbose=FALSE)
   indices <- ((cutoff-199):cutoff)[corrected_data[(cutoff-199):cutoff]!=0]
   if (length(indices)==0)
     indices <- ((cutoff-299):cutoff)[corrected_data[(cutoff-299):cutoff]!=0]
-  signal <- corrected_data[indices]
-  if (length(indices)==1)
+  if (length(indices)>0)
   {
-    signal <- c(signal,signal*1.001)
-    indices <- c(indices,indices+1)
-  }
-  coefficient_estimate <- (signal[1:(length(signal)-1)]-signal[2:length(signal)])/(indices[2:length(indices)]-indices[1:(length(indices)-1)])/bin_width/2
-  if (sum(coefficient_estimate>0)>0)
-  {
-    coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+    signal <- corrected_data[indices]
+    if (length(indices)==1)
+    {
+      signal <- c(signal,signal*1.001)
+      indices <- c(indices,indices+1)
+    }
+    coefficient_estimate <- (signal[1:(length(signal)-1)]-signal[2:length(signal)])/(indices[2:length(indices)]-indices[1:(length(indices)-1)])/bin_width/2
+    if (sum(coefficient_estimate>0)>0)
+    {
+      coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+    } else {
+      coefficient_estimate <- abs(mean(coefficient_estimate))
+    }
+    extinction <- exp((corrected_data[min(seq(length(anomalies))[anomalies==1][1],seq(50)[corrected_data[1:50]==max(corrected_data[1:50])]):length(corrected_data)]-mean(signal))/k)
+    extinction[extinction<0] <- 0
+    integrals <- c()
+    for (i in 1:length(extinction))
+      integrals <- c(integrals,sum(extinction[i:cutoff])*bin_width)
+    return(c(rep(0,min(seq(length(anomalies))[anomalies==1][1],seq(50)[corrected_data[1:50]==max(corrected_data[1:50])])-1),extinction/(coefficient_estimate^(-1)+2*integrals/k)))
   } else {
-    coefficient_estimate <- abs(mean(coefficient_estimate))
+    message("Measurement set contains insufficient non-zero measurements for analysis.")
+    return(rep(0,length(data)))           
   }
-  extinction <- exp((corrected_data[min(seq(length(anomalies))[anomalies==1][1],seq(50)[corrected_data[1:50]==max(corrected_data[1:50])]):length(corrected_data)]-mean(signal))/k)
-  extinction[extinction<0] <- 0
-  integrals <- c()
-  for (i in 1:length(extinction))
-    integrals <- c(integrals,sum(extinction[i:cutoff])*bin_width)
-  return(c(rep(0,min(seq(length(anomalies))[anomalies==1][1],seq(50)[corrected_data[1:50]==max(corrected_data[1:50])])-1),extinction/(coefficient_estimate^(-1)+2*integrals/k)))
 }
 
 scanning_profile_extinction <- function(scanning_directory,measurements_of_interest,is_scan,k=1,verbose=FALSE,output_file=FALSE)
@@ -184,6 +190,9 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
         message("WARNING! Measurement set ",file_list[!measurement_check][i]," has less than 5% non-zero measurements. Discarded from analysis.")
       data <- data[,measurement_check]
     } else {
+      if (max(colSums(data[ceiling(200/3.75):dim(data)[1],]!=0)/dim(data)[1])<=0.01)
+        message("Heavy visibility obstruction. Visibility less than 100 m, non-estimable")
+      write.table(c("This measurement set had less than 5% non-zero measurements. Unable to proceed to analysis.","Heavy visibility obstruction. Visibility less than 100 m, non-estimable")[1:(as.integer(max(colSums(data[ceiling(200/3.75):dim(data)[1],]!=0)/dim(data)[1])<=0.01)+1)],file="Visibility_unavailable.txt",quote=FALSE,sep="\t",row.names=FALSE,col.names=FALSE)
       stop("This measurement set had less than 5% non-zero measurements. Unable to proceed to analysis.")
     }
   }
@@ -215,6 +224,8 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
     if (!verbose)
       setTxtProgressBar(progress,i)
   }
+  measurement_check[measurement_check][colSums(data)==0] <- FALSE
+  data <- data[,colSums(data)!=0]
   if (!verbose)
     close(progress)
   headers <- c()
@@ -223,7 +234,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   colnames(data) <- headers
   rownames(data) <- as.character(seq(dim(data)[1])*bin_width)
   if(output_file)
-    write.table(data,file=paste(paste("Radial_extinction_coefficients",wavelength,"nm.txt",sep="_"),sep="/"),quote=FALSE,sep="\t",row.names=TRUE,col.names=TRUE)
+    write.table(data,file=paste("Radial_extinction_coefficients",wavelength,"nm.txt",sep="_"),quote=FALSE,sep="\t",row.names=TRUE,col.names=TRUE)
   return(data)
 }
 
