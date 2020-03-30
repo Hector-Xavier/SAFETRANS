@@ -283,14 +283,18 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
       visibility <- c(visibility,sum(extinction[ceiling(incoming_range/bin_width):i]*bin_width))
     if (visibility[length(visibility)]>=3)
     {
-      return(length(visibility[visibility<=3])*bin_width)
+      return(sum(visibility<=3)*bin_width)
     } else {
       return(c(incoming_range,visibility[length(visibility)]))
     }
   } else {
     for (i in 1:length(extinction))
+    {
       visibility <- c(visibility,sum(extinction[1:i]*bin_width))
-    return(length(visibility[visibility<=3])*bin_width)
+      if (visibility[i]>3)
+        break
+    }
+    return(sum(visibility<=3)*bin_width)
   }
 }
 
@@ -482,14 +486,14 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
     #if(is.null(vertical_visibility[2]))
     if (vertical_visibility[1] < incoming_height)    
     {
-      slant_visibility <- "No optical contact between object and ground. Slant visibility unavailable."
+      median_slant_visibility <- "No optical contact between object and ground. Slant visibility unavailable."
       minimum_slant_visibility <- "No optical contact between object and ground. Minimum slant visibility unavailable."
       homogeneous_slant_visibility <- "No optical contact between object and ground. Homogeneous slant visibility unavailable."
     } else {
-      pseudo_visibility <- visibility_range(extinction=c(rep(median(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)[1]
+      median_pseudo_visibility <- visibility_range(extinction=c(rep(median(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)[1]
       minimum_pseudo_visibility <- visibility_range(extinction=c(rep(max(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)[1]
       homogeneous_slant_visibility <- floor(incoming_height * sin(acos(vertical_visibility[2]/3)))
-      slant_visibility <- ceiling(sqrt(pseudo_visibility^2 - incoming_height^2))
+      median_slant_visibility <- ceiling(sqrt(median_pseudo_visibility^2 - incoming_height^2))
       minimum_slant_visibility <- ceiling(sqrt(minimum_pseudo_visibility^2 - incoming_height^2))
     }
     if (verbose | (!verbose && !output_files))
@@ -508,12 +512,12 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       if (vertical_visibility[1] < incoming_height)
       {
         message("Vertical visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",vertical_visibility[1]," m.")
-        message(slant_visibility)
+        message(median_slant_visibility)
         message(minimum_slant_visibility)
         message(homogeneous_slant_visibility)
       } else {
         message(c("Outcoming","Incoming")[as.integer(incoming)+1]," object at a height of ",incoming_height," m and distance of ",incoming_distance," m has optical contact with ground.")
-        message("Slant visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",slant_visibility," m.")
+        message("Slant visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",median_slant_visibility," m.")
         message("Minimum slant visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",minimum_slant_visibility," m.")
         message("Homogeneous slant visibility from a height of ",incoming_height," m and distance of ",incoming_distance," m: ",homogeneous_slant_visibility," m.")
       }
@@ -534,9 +538,9 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
     {
       if (incoming)
       {
-        write.table(c(horizontal_visibility,vertical_visibility[1],slant_visibility,minimum_slant_visibility,homogeneous_slant_visibility),file=paste("Incoming_object_visibility_",model,".txt",sep=""),quote=FALSE,sep="\t",col.names=paste("Incoming height: ",incoming_height," m, incoming distance: ",incoming_distance," m.",sep=""),row.names=c("Horizontal visibility: ","Vertical visibility: ","Slant visibility:","Minimum slant visibility:","Homogeneous slant visibility:"))
+        write.table(c(horizontal_visibility,vertical_visibility[1],median_slant_visibility,minimum_slant_visibility,homogeneous_slant_visibility),file=paste("Incoming_object_visibility_",model,".txt",sep=""),quote=FALSE,sep="\t",col.names=paste("Incoming height: ",incoming_height," m, incoming distance: ",incoming_distance," m.",sep=""),row.names=c("Horizontal visibility: ","Vertical visibility: ","Slant visibility:","Minimum slant visibility:","Homogeneous slant visibility:"))
       } else {
-        write.table(c(horizontal_visibility,vertical_visibility[1],slant_visibility,minimum_slant_visibility,homogeneous_slant_visibility),file=paste("Outcoming_object_visibility_",model,".txt",sep=""),quote=FALSE,sep="\t",col.names=paste("Outcoming height: ",incoming_height," m, outcoming distance: ",incoming_distance," m.",sep=""),row.names=c("Horizontal visibility: ","Vertical visibility: ","Slant visibility:","Minimum slant visibility:","Homogeneous slant visibility:"))
+        write.table(c(horizontal_visibility,vertical_visibility[1],median_slant_visibility,minimum_slant_visibility,homogeneous_slant_visibility),file=paste("Outcoming_object_visibility_",model,".txt",sep=""),quote=FALSE,sep="\t",col.names=paste("Outcoming height: ",incoming_height," m, outcoming distance: ",incoming_distance," m.",sep=""),row.names=c("Horizontal visibility: ","Vertical visibility: ","Slant visibility:","Minimum slant visibility:","Homogeneous slant visibility:"))
       }
     }
   }
