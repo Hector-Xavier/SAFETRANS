@@ -1104,6 +1104,16 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       if (progressive_slant_visibility < 0)
         progressive_slant_visibility <- c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[abs(progressive_slant_visibility)]
       homogeneous_slant_visibility <- floor(incoming_height * sin(acos(vertical_visibility[2]/3)))
+      if (incoming)
+      {
+        median_slant_visibility <- min(median_slant_visibility,incoming_distance)
+        minimum_slant_visibility <- min(minimum_slant_visibility,incoming_distance)
+        homogeneous_slant_visibility <- min(homogeneous_slant_visibility,incoming_distance)
+      } else {
+        median_slant_visibility <- min(median_slant_visibility,dim(cartesian_profile)[2]*bin_width-incoming_distance)
+        minimum_slant_visibility <- min(minimum_slant_visibility,dim(cartesian_profile)[2]*bin_width-incoming_distance)
+        homogeneous_slant_visibility <- min(homogeneous_slant_visibility,dim(cartesian_profile)[2]*bin_width-incoming_distance)
+      }
     }
     if (verbose | (!verbose && !output_files))
     {      
