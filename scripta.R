@@ -304,22 +304,22 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
   bahroken <- FALSE
   if (incoming)
   {
-    message("Incoming, must check whether airport is visible")
+    #message("Incoming, must check whether airport is visible")
     # do you see the airport
     if (incoming_height==incoming_distance)
     {
-      message("Airport at 45 degrees")
+      #message("Airport at 45 degrees")
       angle <- 45
       progressive_slant_visibility_temp <- visibility_range(extinction=diag(cartesian_extinction[1:ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)
     } else {
       if (incoming_distance > incoming_height)
       {
-        message("Airport at more than 45 degrees")
+        #message("Airport at more than 45 degrees")
         angle <- atan(incoming_height/incoming_distance)/pi*180
         minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)])
         offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
       } else {
-        message("Airport at less than 45 degrees")
+        #message("Airport at less than 45 degrees")
         angle <- atan(incoming_distance/incoming_height)/pi*180
         minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)]
         offsets <- seq(ceiling(incoming_distance/bin_width))%/%ceiling(ceiling(incoming_distance/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_distance/bin_width)))
@@ -344,14 +344,14 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
     }
     if (is.na(progressive_slant_visibility_temp[2])) #can't see airport, must find out how far it can see
     {
-      message("Can't see the airport")
+      #message("Can't see the airport")
       if (incoming_distance <= incoming_height) #airport is not visible, and is at less than 45 degrees
       {
-        message("Airport invisible and at less than 45 degrees from vertical")
+        #message("Airport invisible and at less than 45 degrees from vertical")
         angle <- 45
         if (is.na(visibility_range(extinction=diag(cartesian_extinction[1:ceiling(incoming_height/bin_width),seq(sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[1] +1,sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[2])]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
         {
-          message("Therefore, searching at less than 45 degrees")
+          #message("Therefore, searching at less than 45 degrees")
           #less than diagonal
           for (i in 1:2)
           {
@@ -375,7 +375,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
               #message(sum(offsets<j+1))
               #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
             }
-            message(angle)
+            #message(angle)
             if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
               break
             angle <- 45
@@ -405,7 +405,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
               #message(sum(offsets<j+1))
               #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
             }
-            message(angle)
+            #message(angle)
             if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
               break
             angle <- true_angle + 15
@@ -436,7 +436,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
               #message(sum(offsets<j+1))
               #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
             }
-            message(angle)
+            #message(angle)
             if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
               break
             angle <- true_angle + 5
@@ -444,13 +444,13 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           true_angle <- angle-1 #this is the final angle
         }
       } else {
-        message("Airport invisible and at more than 45 degrees from vertical")
+        #message("Airport invisible and at more than 45 degrees from vertical")
         #airport is not visible, and is beyond 45 degrees
         #searching below and above the diagonal
         angle <- 45
         if (is.na(visibility_range(extinction=diag(cartesian_extinction[1:ceiling(incoming_height/bin_width),seq(sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[1] +1,sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[2])]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
         {
-          message("Can't see the ground at 45 degrees")
+          #message("Can't see the ground at 45 degrees")
           #less than diagonal
           for (i in 1:2)
           {
@@ -469,7 +469,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
               #message(sum(offsets<j+1))
               #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
             }
-            message(angle)
+            #message(angle)
             if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
               break
             #angle <- 15
@@ -494,7 +494,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
               #message(sum(offsets<j+1))
               #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
             }
-            message(angle)
+            #message(angle)
             if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
               break
             angle <- true_angle + 15
@@ -520,14 +520,14 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
               #message(sum(offsets<j+1))
               #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
             }
-            message(angle)
+            #message(angle)
             if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
               break
             angle <- true_angle + 5
           }
           true_angle <- angle-1 #this is the final angle
         } else {
-          message("Can see the ground at 45 degrees")
+          #message("Can see the ground at 45 degrees")
           #airport invisible, true angle over 45 degrees, incoming or outcoming
           #more than diagonal
           for (i in 2:1)
@@ -555,8 +555,8 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
               #message(sum(offsets<j+1))
               #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
             }
-            message(angle)
-            message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
+            #message(angle)
+            #message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
             if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2]))
               break
             angle <- 0
@@ -585,8 +585,8 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
               #message(sum(offsets<j+1))
               #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
             }
-            message(angle)
-            message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
+            #message(angle)
+            #message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
             if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2]))
               break
             angle <- true_angle
@@ -618,8 +618,8 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
               #message(sum(offsets<j+1))
               #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
             }
-            message(angle)
-            message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
+            #message(angle)
+            #message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
             if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2]))
               break
             angle <- true_angle
@@ -628,21 +628,21 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
         }
       }
     } else {
-      message("Can see the airport")
+      #message("Can see the airport")
       visible_airport <- TRUE
     }
   } else {
-    message("Outcoming")
+    #message("Outcoming")
     #outcoming
     #airport is not visible, and is beyond 45 degrees
     #searching below and above the diagonal
     angle <- 45
     if (!c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
     {
-      message("Can't see the end of the map at 45 degrees")
+      #message("Can't see the end of the map at 45 degrees")
       if (is.na(visibility_range(extinction=diag(cartesian_extinction[1:ceiling(incoming_height/bin_width),seq(sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[1] +1,sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[2])]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
       {
-        message("Can't see the ground at 45 degrees")
+        #message("Can't see the ground at 45 degrees")
         #less than diagonal
         for (i in 1:2)
         {
@@ -661,7 +661,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             #message(sum(offsets<j+1))
             #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
           }
-          message(angle)
+          #message(angle)
           if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
             break
           #angle <- 15
@@ -686,7 +686,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             #message(sum(offsets<j+1))
             #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
           }
-          message(angle)
+          #message(angle)
           if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
             break
           angle <- true_angle + 15
@@ -712,14 +712,14 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             #message(sum(offsets<j+1))
             #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
           }
-          message(angle)
+          #message(angle)
           if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
             break
           angle <- true_angle + 5
         }
         true_angle <- angle-1 #this is the final angle
       } else {
-        message("Can see the ground at 45 degrees, searching over them")
+        #message("Can see the ground at 45 degrees, searching over them")
         #airport invisible, true angle over 45 degrees, incoming or outcoming
         #more than diagonal
         for (i in 2:1)
@@ -745,8 +745,8 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             #message(sum(offsets<j+1))
             #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
           }
-          message(angle)
-          message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
+          #message(angle)
+          #message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
           if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2]))
             break
           angle <- 0
@@ -773,8 +773,8 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             #message(sum(offsets<j+1))
             #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
           }
-          message(angle)
-          message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
+          #message(angle)
+          #message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
           if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2]))
             break
           angle <- true_angle
@@ -801,8 +801,8 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             #message(sum(offsets<j+1))
             #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
           }
-          message(angle)
-          message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
+          #message(angle)
+          #message(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2])
           if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/sin(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/sin(angle*pi/180),verbose=FALSE)[2]))
             break
           angle <- true_angle
@@ -815,7 +815,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
         }
       }
     } else {
-      message("Can see the end of the map at 45 degrees, searching in there")
+      #message("Can see the end of the map at 45 degrees, searching in there")
       #less than diagonal
       for (i in 1:2)
       {
@@ -836,7 +836,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           #message(sum(offsets<j+1))
           #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
         }
-        message(angle)
+        #message(angle)
         if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
           break
         #angle <- 15
@@ -863,7 +863,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           #message(sum(offsets<j+1))
           #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
         }
-        message(angle)
+        #message(angle)
         if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
           break
         angle <- true_angle + 15
@@ -875,9 +875,9 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
       for (i in 1:4)
       {
         angle <- true_angle + i
-        message(angle)
+        #message(angle)
         minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
-        message("Done")
+        #message("Done")
         angled_extinction_profile <- c()
         #change in offset
         offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -891,7 +891,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           #message(sum(offsets<j+1))
           #message(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * j)
         }
-        message(angle)
+        #message(angle)
         if (is.na(visibility_range(extinction=angled_extinction_profile,bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
           break
         angle <- true_angle + 5
@@ -908,21 +908,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
   
   if (!visible_airport & !bahroken)
   {
-    message("True angle: ",true_angle)
-    return(incoming_height*tan(true_angle*pi/180))
-  } else {
-    if (visible_airport)
-    {
-      return(-1)
-    } else {
-      return(-2)
-    }
-  }
-}
-  
-  if (!visible_airport & !bahroken)
-  {
-    message("True angle: ",true_angle)
+    #message("True angle: ",true_angle)
     return(incoming_height*tan(true_angle*pi/180))
   } else {
     if (visible_airport)
