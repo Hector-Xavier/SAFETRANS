@@ -298,7 +298,7 @@ visibility_range <- function(extinction,bin_width,model=NULL,wavelength,incoming
   }
 }
 
-progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NULL,wavelength,incoming=FALSE,incoming_height,incoming_distance,verbose=FALSE)
+progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wavelength,incoming=FALSE,incoming_height,incoming_distance,verbose=FALSE)
 {
   visible_airport <- FALSE
   bahroken <- FALSE
@@ -308,16 +308,16 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
     if (incoming_height==incoming_distance)
     {
       angle <- 45
-      progressive_slant_visibility_temp <- visibility_range(extinction=diag(cartesian_profile[1:ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)
+      progressive_slant_visibility_temp <- visibility_range(extinction=diag(cartesian_extinction[1:ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)
     } else {
       if (incoming_distance > incoming_height)
       {
         angle <- atan(incoming_height/incoming_distance)/pi*180
-        minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)])
+        minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)])
         offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
       } else {
         angle <- atan(incoming_distance/incoming_height)/pi*180
-        minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)]
+        minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),1:ceiling(incoming_distance/bin_width)]
         offsets <- seq(ceiling(incoming_distance/bin_width))%/%ceiling(ceiling(incoming_distance/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_distance/bin_width)))
       }
       angled_extinction_profile <- c()
@@ -343,7 +343,7 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
       if (incoming_distance <= incoming_height) #airport is not visible, and is at less than 45 degrees
       {
         angle <- 45
-        if (is.na(visibility_range(extinction=diag(cartesian_profile[1:ceiling(incoming_height/bin_width),seq(sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[1] +1,sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[2])]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
+        if (is.na(visibility_range(extinction=diag(cartesian_extinction[1:ceiling(incoming_height/bin_width),seq(sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[1] +1,sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[2])]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
         {
           #less than diagonal
           for (i in 1:2)
@@ -354,7 +354,7 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
               true_angle <- angle
               break
             }
-            minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+            minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
             
             angled_extinction_profile <- c()
             offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -384,7 +384,7 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
               true_angle <- angle
               break
             }
-            minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+            minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
             
             angled_extinction_profile <- c()
             offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -415,7 +415,7 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
               true_angle <- angle
               break
             }
-            minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+            minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
             
             angled_extinction_profile <- c()
             offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -440,13 +440,13 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
         #airport is not visible, and is beyond 45 degrees
         #searching below and above the diagonal
         angle <- 45
-        if (is.na(visibility_range(extinction=diag(cartesian_profile[1:ceiling(incoming_height/bin_width),seq(sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[1] +1,sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[2])]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
+        if (is.na(visibility_range(extinction=diag(cartesian_extinction[1:ceiling(incoming_height/bin_width),seq(sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[1] +1,sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[2])]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
         {
           #less than diagonal
           for (i in 1:2)
           {
             angle <- 15*i
-            minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+            minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
             
             angled_extinction_profile <- c()
             offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -471,7 +471,7 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
           for (i in 1:2)
           {
             angle <- true_angle + 5*i
-            minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+            minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
             
             angled_extinction_profile <- c()
             offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -497,7 +497,7 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
           for (i in 1:4)
           {
             angle <- true_angle + i
-            minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+            minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
             
             angled_extinction_profile <- c()
             offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -523,13 +523,13 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
           for (i in 2:1)
           {
             angle <- 15*i
-            if (c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height/tan((angle)*pi/180))
+            if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height/tan((angle)*pi/180))
               break
-            #minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]])
-            #minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),c(1,ceiling(incoming_height/bin_width))[as.integer(!incoming)+1]:c(ceiling(incoming_distance/bin_width),dim(cartesian_profile)[2])[as.integer(!incoming)+1]])
+            #minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]])
+            #minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),c(1,ceiling(incoming_height/bin_width))[as.integer(!incoming)+1]:c(ceiling(incoming_distance/bin_width),dim(cartesian_extinction)[2])[as.integer(!incoming)+1]])
             ##########################################################
             #range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]
-            minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
+            minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
             
             
             angled_extinction_profile <- c()
@@ -557,9 +557,9 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
           for (i in 2:1)
           {
             angle <- true_angle + 5*i
-            if (c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height/tan((angle)*pi/180))
+            if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height/tan((angle)*pi/180))
               break
-            minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
+            minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
             
             
             angled_extinction_profile <- c()
@@ -587,12 +587,12 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
           for (i in 4:1)
           {
             angle <- true_angle + i
-            if (c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height/tan((angle)*pi/180))
+            if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height/tan((angle)*pi/180))
             {
               bahroken <- TRUE
               break
             }
-            minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
+            minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
             
             
             angled_extinction_profile <- c()
@@ -625,15 +625,15 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
     #airport is not visible, and is beyond 45 degrees
     #searching below and above the diagonal
     angle <- 45
-    if (!c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
+    if (!c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
     {
-      if (is.na(visibility_range(extinction=diag(cartesian_profile[1:ceiling(incoming_height/bin_width),seq(sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[1] +1,sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[2])]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
+      if (is.na(visibility_range(extinction=diag(cartesian_extinction[1:ceiling(incoming_height/bin_width),seq(sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[1] +1,sort(c(ceiling(incoming_distance/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * ceiling(incoming_height/bin_width)))[2])]),bin_width=bin_width/cos(angle*pi/180),model,wavelength,incoming=TRUE,incoming_range=incoming_height/cos(angle*pi/180),verbose=FALSE)[2]))
       {
         #less than diagonal
         for (i in 1:2)
         {
           angle <- 15*i
-          minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+          minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
           
           angled_extinction_profile <- c()
           offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -658,7 +658,7 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
         for (i in 1:2)
         {
           angle <- true_angle + 5*i
-          minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+          minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
           
           angled_extinction_profile <- c()
           offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -684,7 +684,7 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
         for (i in 1:4)
         {
           angle <- true_angle + i
-          minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+          minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
           
           angled_extinction_profile <- c()
           offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -710,13 +710,13 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
         for (i in 2:1)
         {
           angle <- 15*i
-          if (c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
+          if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
             break
-          #minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]])
-          #minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),c(1,ceiling(incoming_height/bin_width))[as.integer(!incoming)+1]:c(ceiling(incoming_distance/bin_width),dim(cartesian_profile)[2])[as.integer(!incoming)+1]])
+          #minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]])
+          #minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),c(1,ceiling(incoming_height/bin_width))[as.integer(!incoming)+1]:c(ceiling(incoming_distance/bin_width),dim(cartesian_extinction)[2])[as.integer(!incoming)+1]])
           ##########################################################
           #range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]
-          minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
+          minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
           
           
           angled_extinction_profile <- c()
@@ -744,9 +744,9 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
         for (i in 2:1)
         {
           angle <- true_angle + 5*i
-          if (c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
+          if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
             break
-          minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
+          minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
           
           
           angled_extinction_profile <- c()
@@ -774,12 +774,12 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
         for (i in 4:1)
         {
           angle <- true_angle + i
-          if (c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
+          if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
           {
             bahroken <- TRUE
             break
           }
-          minnie_profile <- t(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
+          minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
           
           
           angled_extinction_profile <- c()
@@ -808,9 +808,9 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
       for (i in 1:2)
       {
         angle <- 15*i
-        if (c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
+        if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
           break
-        minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+        minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
         
         angled_extinction_profile <- c()
         offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -835,9 +835,9 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
       for (i in 1:2)
       {
         angle <- true_angle + 5*i
-        if (c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
+        if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
           break
-        minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+        minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
         
         angled_extinction_profile <- c()
         offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
@@ -863,12 +863,12 @@ progressive_slant_visibility <- function(cartesian_extinction,bin_width,model=NU
       for (i in 1:4)
       {
         angle <- true_angle + i
-        if (c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
+        if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height*tan((angle)*pi/180))
         {
           bahroken <- TRUE
           break
         }
-        minnie_profile <- cartesian_profile[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
+        minnie_profile <- cartesian_extinction[1:ceiling(incoming_height/bin_width),range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2]]
         
         angled_extinction_profile <- c()
         offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
