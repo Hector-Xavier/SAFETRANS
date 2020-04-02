@@ -597,11 +597,6 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           for (i in 4:1)
           {
             angle <- true_angle + i
-            if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height/tan((angle)*pi/180))
-            {
-              bahroken <- TRUE
-              break
-            }
             minnie_profile <- t(cartesian_extinction[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))])
             
             
@@ -625,6 +620,11 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             angle <- true_angle
           }
           true_angle <- 90-angle #this is the final angle
+          if (c(incoming_distance,dim(cartesian_extinction)[2]*bin_width-incoming_distance)[as.integer(!incoming)+1] <= incoming_height/tan((angle)*pi/180))
+          {
+            visible_airport <- TRUE
+            #break
+          }
         }
       }
     } else {
