@@ -1120,7 +1120,7 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       progressive_slant_visibility <- progressive_slant_range(cartesian_extinction=cartesian_profile,bin_width,model,wavelength,incoming,incoming_distance,incoming_height,verbose)
       if (progressive_slant_visibility < 0)
         progressive_slant_visibility <- c(incoming_distance,dim(cartesian_profile)[2]*bin_width-incoming_distance)[abs(progressive_slant_visibility)]
-      homogeneous_slant_visibility <- floor(incoming_height * sin(acos(vertical_visibility[2]/3)))
+      homogeneous_slant_visibility <- floor(incoming_height * tan(acos(vertical_visibility[2]/3)))
       if (incoming)
       {
         median_slant_visibility <- min(median_slant_visibility,incoming_distance)
