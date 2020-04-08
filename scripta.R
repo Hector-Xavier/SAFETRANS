@@ -233,7 +233,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   rownames(data) <- as.character(seq(dim(data)[1])*bin_width)
   if(output_file)
     write.table(data,file=paste("Radial_extinction_coefficients",wavelength,"nm.txt",sep="_"),quote=FALSE,sep="\t",row.names=TRUE,col.names=TRUE)
-  data <- data[,colSums(data*bin_width)>=3]
+  #data <- data[,colSums(data*bin_width)>=3]
   return(data)
 }
 
