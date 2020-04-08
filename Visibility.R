@@ -53,6 +53,7 @@ if (!is_scan)
   {
     message("Radial extinction coefficent profile present. Loading data...")
     extinction <- read.table(file=paste("Radial_extinction_coefficients",wavelength,"nm.txt",sep="_"),header=TRUE,quote="")
+    #extinction <- data[,colSums(data*(as.numeric(rownames(profile)[2])-as.numeric(rownames(profile)[1])))>=3]
   } else {
     if (!verbose)
       message("Importing data and calculating the radial extinction coefficent profile.")
