@@ -84,8 +84,8 @@ if (!is_scan)
       cartesian_visibility_profile(extinction,NULL,wavelength,incoming,distance,height,output,verbose)
       if (wavelength!=355)
       {
-      cartesian_visibility_profile(extinction,"maritime",wavelength,incoming,distance,height,output,verbose)
-      cartesian_visibility_profile(extinction,"urban-rural",wavelength,incoming,distance,height,output,verbose)
+        cartesian_visibility_profile(extinction,"maritime",wavelength,incoming,distance,height,output,verbose)
+        cartesian_visibility_profile(extinction,"urban-rural",wavelength,incoming,distance,height,output,verbose)
       }
       cartesian_visibility_profile(extinction,"angstrom_exponent",wavelength,incoming,distance,height,output,verbose)
     } else {
