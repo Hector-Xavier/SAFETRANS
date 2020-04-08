@@ -971,6 +971,9 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
   visibility <- matrix(visibility,ncol=1,dimnames=list(colnames(extinction_profile),model))
   if (output_file && is_scan)
   {
+    extinction_profile <- extinction_profile[,visibility < dim(extinction_profile)[1]*bin_width]
+    visibility <- visibility[visibility < dim(extinction_profile)[1]*bin_width,1]
+    visibility <- matrix(visibility,ncol=1,dimnames=list(colnames(extinction_profile),model))
     if(!file.exists(paste(getwd(),"Azimuth_visibility_plots",sep="/")))
       dir.create(paste(getwd(),"Azimuth_visibility_plots",sep="/"))
     angle <- c()
