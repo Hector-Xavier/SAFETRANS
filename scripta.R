@@ -1016,8 +1016,12 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       progressive_slant_visibility <- "No optical contact between object and ground. Progressive slant visibility unavailable."
     } else {
       median_pseudo_visibility <- visibility_range(extinction=c(rep(median(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)[1]
+      if (median_pseudo_visibility==incoming_height+maximum_height)
+        median_pseudo_visibility <- visibility_range(extinction=c(rep(median(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),dim(cartesian_profile)[2]),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,dim(cartesian_profile)[2]*bin_width+incoming_height,verbose=FALSE)[1]
       median_slant_visibility <- ceiling(sqrt(median_pseudo_visibility^2 - incoming_height^2))
       minimum_pseudo_visibility <- visibility_range(extinction=c(rep(max(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),maximum_height/bin_width),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,incoming_height+maximum_height,verbose=FALSE)[1]
+      if (minimum_pseudo_visibility==incoming_height+maximum_height)
+        minimum_pseudo_visibility <- visibility_range(extinction=c(rep(max(cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),dim(cartesian_profile)[2]),cartesian_profile[1:ceiling(incoming_height/bin_width),ceiling(incoming_distance/bin_width)]),bin_width,model,wavelength,incoming=TRUE,dim(cartesian_profile)[2]*bin_width+incoming_height,verbose=FALSE)[1]
       minimum_slant_visibility <- ceiling(sqrt(minimum_pseudo_visibility^2 - incoming_height^2))
       progressive_slant_visibility <- progressive_slant_range(cartesian_extinction=cartesian_profile,bin_width,model,wavelength,incoming,incoming_distance,incoming_height,verbose)
       if (progressive_slant_visibility < 0)
