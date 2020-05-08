@@ -70,7 +70,7 @@ upper_atmosphere_cutoff <- function(data,bin_width,range_offset=0,verbose=FALSE)
       cutoff <- i+1
       break
     }
-  cutoff <- min(max(floor(8000/bin_width),cutoff),floor(20000/bin_width))
+  cutoff <- min(max(floor(8000/bin_width),cutoff),floor(30000/bin_width))
   if (verbose)
     message("Optimal cutoff height: ",cutoff*bin_width," m.")
   return(cutoff)
