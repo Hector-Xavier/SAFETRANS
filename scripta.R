@@ -190,8 +190,8 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
         message("WARNING! Measurement set ",file_list[!measurement_check][i]," has less than 5% non-zero measurements. Discarded from analysis.")
       data <- data[,measurement_check]
     } else {
-      write.table(c("An acceptable measurement set had non-estimable aerosol-free signal. Unable to proceed to analysis.","Heavy visibility obstruction. Visibility less than 100 m, non-estimable.")[as.integer(max(colSums(data[ceiling(200/3.75):dim(data)[1],]!=0)/dim(data)[1])<=0.01)+1],file="Visibility_unavailable.txt",quote=FALSE,sep="\t",row.names=FALSE,col.names=FALSE)
-      stop(c("An acceptable measurement set had non-estimable aerosol-free signal. Unable to proceed to analysis.","Heavy visibility obstruction. Visibility less than 100 m, non-estimable.")[as.integer(max(colSums(data[ceiling(200/3.75):dim(data)[1],]!=0)/dim(data)[1])<=0.01)+1])
+      write.table(c("An acceptable measurement set had non-estimable aerosol-free signal. Unable to proceed to analysis.","Heavy visibility obstruction. Visibility less than 100 m, non-estimable.")[as.integer(max(colSums(data[ceiling(200/bin_width):dim(data)[1],]!=0)/dim(data)[1])<=0.01)+1],file="Visibility_unavailable.txt",quote=FALSE,sep="\t",row.names=FALSE,col.names=FALSE)
+      stop(c("An acceptable measurement set had non-estimable aerosol-free signal. Unable to proceed to analysis.","Heavy visibility obstruction. Visibility less than 100 m, non-estimable.")[as.integer(max(colSums(data[ceiling(200/bin_width):dim(data)[1],]!=0)/dim(data)[1])<=0.01)+1])
     }
   }
   if (!is_scan)
