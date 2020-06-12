@@ -180,7 +180,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   for (i in 2:length(file_list))
   {
     data <- cbind(data,reading_and_preparation(filename=paste(scanning_directory,file_list[i],sep="/"),significant_data_sets=max(measurements_of_interest,2))[,measurements_of_interest])
-    measurement_check <- c(measurement_check,sum(reading_and_preparation(filename=paste(scanning_directory,file_list[i],sep="/"),significant_data_sets=2)[,2]!=0)/dim(data)[1] >= 0.05)
+    measurement_check <- c(measurement_check,sum(reading_and_preparation(filename=paste(scanning_directory,file_list[i],sep="/"),significant_data_sets=2)[,measurements_of_interest]!=0)/dim(data)[1] >= 0.05)
   }
   if (sum(!measurement_check)>0)
   {
