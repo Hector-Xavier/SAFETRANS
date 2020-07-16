@@ -64,7 +64,7 @@ upper_atmosphere_cutoff <- function(data,bin_width,range_offset=0,verbose=FALSE)
   if (sum(is.na(temp_snr))>0)
     temp_snr[is.na(temp_snr)] <- 0
   cutoff <- NULL
-  for (i in 1:4000)
+  for (i in 1:floor(30000/bin_width))
     if (sd(temp_snr[i:(i+600)]) < sd(temp_snr[ceiling(37500/bin_width):length(temp_snr)]))
     {
       cutoff <- i+1
