@@ -57,7 +57,7 @@ upper_atmosphere_cutoff <- function(data,bin_width,range_offset=0,verbose=FALSE)
 {
   if (is.null(bin_width))
     stop("Please enter a valid value for bin_width, as it is necessary for unsupervised usage.")
-  temp_data <- expm1(range_correction(data=background_subtraction(data,first_bin=length(data)-2000,last_bin=length(data)),bin_width))
+  temp_data <- expm1(range_correction(data=background_subtraction(data,first_bin=length(data)-floor(15000/bin_width),last_bin=length(data)),bin_width))
   temp_snr <- c()
   for (i in 1:(length(temp_data)-150))
     temp_snr <- c(temp_snr,mean(temp_data[i:(i+150)])/sd(temp_data[i:(i+150)]))
