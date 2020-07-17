@@ -206,10 +206,10 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
         message("Measurements in channel ",measurements_of_interest[i]," at a distance of ",bin_width," m exhibit SNR less than ",ceiling(1/snr_limit),".")
         message("Current SNR of channel ",measurements_of_interest[i],": ",floor(mean(data[1,indices_under_scrutiny]*bin_width^2)/sd(data[1,indices_under_scrutiny]*bin_width^2)),". Caution and possible instrument calibrartion recommended.")
       }
-      stabilization <- c()
-      for (j in 1:length(indices_under_scrutiny))
-        stabilization <- c(stabilization,mean(data[1,indices_under_scrutiny])/data[1,indices_under_scrutiny[j]])
-      data[,indices_under_scrutiny] <- t(t(data[,indices_under_scrutiny])*stabilization)
+      #stabilization <- c()
+      #for (j in 1:length(indices_under_scrutiny))
+      #  stabilization <- c(stabilization,mean(data[1,indices_under_scrutiny])/data[1,indices_under_scrutiny[j]])
+      #data[,indices_under_scrutiny] <- t(t(data[,indices_under_scrutiny])*stabilization)
     }    
   }
   if (!verbose)
