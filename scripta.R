@@ -131,7 +131,7 @@ extinction_coefficient <- function(data,bin_width,k=1,verbose=FALSE)
   anomalies <- anomaly_detection(data=expm1(corrected_data),bin_width=bin_width,verbose=verbose)
   if(sum(abs(anomalies))==0)
     anomalies[length(anomalies)] <- 1
-  cutoff <- max(min(seq(length(data))[anomalies==1][1],upper_atmosphere_cutoff(data,bin_width=bin_width)),600)
+  cutoff <- max(min(seq(length(data))[anomalies==1][1],upper_atmosphere_cutoff(data,bin_width=bin_width)),floor(4500/bin_width))
   indices <- ((cutoff-199):cutoff)[corrected_data[(cutoff-199):cutoff]!=0]
   if (length(indices)==0)
     indices <- ((cutoff-299):cutoff)[corrected_data[(cutoff-299):cutoff]!=0]
