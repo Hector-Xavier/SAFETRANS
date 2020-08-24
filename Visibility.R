@@ -44,9 +44,12 @@ if (output)
   setwd(paste(directory,"Output",sep="/"))
 }
 
+#temporary
+research_material <- FALSE
+
 if (!is_scan)
 {
-  radial_visibility_profile(extinction_profile=scanning_profile_extinction(directory,channels,is_scan,1,verbose,output),is_scan,model,wavelength,output,verbose)
+  radial_visibility_profile(extinction_profile=scanning_profile_extinction(directory,channels,is_scan,1,verbose,output),is_scan,model,wavelength,output,verbose,research_material)
 } else {
   message("Processing measurements as a set of ",scan_type," measurements.")
   if (file.exists(paste("Radial_extinction_coefficients",wavelength,"nm.txt",sep="_")))
@@ -65,15 +68,15 @@ if (!is_scan)
       message("Calculating the radial visibility profile.")
     if (!is.null(model) && model=="all")
     {
-      radial_visibility_profile(extinction,is_scan,NULL,wavelength,output,verbose)
+      radial_visibility_profile(extinction,is_scan,NULL,wavelength,output,verbose,research_material)
       if (wavelength!=355)
       {
-        radial_visibility_profile(extinction,is_scan,"maritime",wavelength,output,verbose)
-        radial_visibility_profile(extinction,is_scan,"urban-rural",wavelength,output,verbose)
+        radial_visibility_profile(extinction,is_scan,"maritime",wavelength,output,verbose,research_material)
+        radial_visibility_profile(extinction,is_scan,"urban-rural",wavelength,output,verbose,research_material)
       }
-      radial_visibility_profile(extinction,is_scan,"angstrom_exponent",wavelength,output,verbose)
+      radial_visibility_profile(extinction,is_scan,"angstrom_exponent",wavelength,output,verbose,research_material)
     } else {
-      radial_visibility_profile(extinction,is_scan,model,wavelength,output,verbose)
+      radial_visibility_profile(extinction,is_scan,model,wavelength,output,verbose,research_material)
     }
   } else {
     message("Extending radial extinction profile to cartesian coordinate system.")
