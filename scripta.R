@@ -841,7 +841,7 @@ angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar
   return(extinction*coefficient)
 }
 
-radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL,wavelength,output_file=TRUE,verbose=FALSE)
+radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL,wavelength,output_file=TRUE,verbose=FALSE,research_material=FALSE)
 {
   bin_width <- as.numeric(rownames(extinction_profile)[2])-as.numeric(rownames(extinction_profile)[1])
   visibility <- c()
@@ -888,7 +888,7 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
       radial.plot(lengths=visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1],radial.pos=angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i]/180*pi,labels=c("N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"),label.pos=(seq(16)-1)/8*pi,start=+pi/2,clockwise=TRUE,rp.type="p",radial.lim=pretty(range(c(0,visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1]))),show.grid.labels=1,radial.labels=paste(pretty(range(c(0,visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1])))/1000,"km",sep=" "),show.centroid=TRUE,main=paste("Radial visibility at",strsplit(rownames(visibility)[1],split="_")[[1]][2],"degrees in channel",levels(as.factor(channels))[i],sep=" "))
       dev.off()
     }
-    if(!file.exists(paste(getwd(),"Azimuth_visibility_plots",paste("Incoming_visibilities",model,sep="_"),sep="/")))
+    if(research_material && !file.exists(paste(getwd(),"Azimuth_visibility_plots",paste("Incoming_visibilities",model,sep="_"),sep="/")))
     {
       dir.create(paste(getwd(),"Azimuth_visibility_plots",paste("Incoming_visibilities",model,sep="_"),sep="/"))
       message("Calculating radial visibility ranges of incoming objects. Selected atmospheric model: ",model,".") 
@@ -921,7 +921,8 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
       if (!verbose)
         close(progress)
     } else {
-      message("Radial visibility plots for atmospheric model '",model,"' already exist. Calculation & creation skipped.") 
+      if(research_material)
+        message("Incoming radial visibility plots for atmospheric model '",model,"' already exist. Calculation & visualization skipped.") 
     }
   }
   #return(visibility)
