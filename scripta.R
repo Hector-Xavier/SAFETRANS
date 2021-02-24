@@ -1086,7 +1086,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
 
 angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar_wavelength)
 {
-  optical_depth_data <- read.table("C:/Users/Hector-Xavier/Desktop/Default directory/AERONET_data.txt",header=TRUE,sep="\t")
+  optical_depth_data <- read.table("/home/SAFETRANS/AERONET_data.txt",header=TRUE,sep="\t")
   optical_depth_data <- optical_depth_data[,!is.na(colSums(optical_depth_data))]  
   if (lidar_wavelength==355)
   {
@@ -1361,5 +1361,5 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       }
     }
   }
-  return(cartesian_profile)
+  #return(cartesian_profile)
 }
