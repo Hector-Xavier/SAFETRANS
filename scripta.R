@@ -57,26 +57,26 @@ upper_atmosphere_cutoff <- function(data,bin_width,range_offset=0,verbose=FALSE)
 {
   if (is.null(bin_width))
     stop("Please enter a valid value for bin_width, as it is necessary for unsupervised usage.")
-  temp_data <- expm1(range_correction(data=background_subtraction(data,first_bin=length(data)-floor(15000/bin_width),last_bin=length(data)),bin_width))
+  temp_data <- expm1(range_correction(data=background_subtraction(data,first_bin=length(data)-2000,last_bin=length(data)),bin_width))
   temp_snr <- c()
   for (i in 1:(length(temp_data)-150))
     temp_snr <- c(temp_snr,mean(temp_data[i:(i+150)])/sd(temp_data[i:(i+150)]))
   if (sum(is.na(temp_snr))>0)
     temp_snr[is.na(temp_snr)] <- 0
   cutoff <- NULL
-  for (i in 1:floor(30000/bin_width))
+  for (i in 1:4000)
     if (sd(temp_snr[i:(i+600)]) < sd(temp_snr[ceiling(37500/bin_width):length(temp_snr)]))
     {
       cutoff <- i+1
       break
     }
-  cutoff <- min(max(floor(8000/bin_width),cutoff),floor(30000/bin_width))
+  cutoff <- min(max(floor(2000/bin_width),cutoff),floor(20000/bin_width)) #liable to change according to lazor
   if (verbose)
-    message("Optimal cutoff height: ",cutoff*bin_width," m.")
+    message("Optimal cutoff range: ",cutoff*bin_width," m.")
   return(cutoff)
 }
 
-anomaly_detection <- function(data,bin_width=NULL,verbose=FALSE,confidence=0.8,window_size=20)
+anomaly_detection <- function(data,bin_width=NULL,angle=NULL,verbose=FALSE,confidence=0.8,window_size=20)
 {
   data <- filter(data,rep(1,5)/5)
   data[is.na(data)] <- 0
@@ -112,9 +112,9 @@ anomaly_detection <- function(data,bin_width=NULL,verbose=FALSE,confidence=0.8,w
       stop("Please enter a valid value for bin_width, as it is necessary for printing out exact heights.")
     for (i in 1:sum(indicator==1))
     {
-      message("Anomaly #",i," bottom at an altitude of ",seq(length(indicator))[indicator==1][i]*bin_width," m.")
-      message("Anomaly #",i," top at an altitude of ",seq(length(indicator))[indicator==-1][i]*bin_width," m.")
-      message("Anomaly #",i," width estimated at ",(seq(length(indicator))[indicator==-1][i]-seq(length(indicator))[indicator==1][i])*bin_width," m.")
+      message("Anomaly #",i," bottom at an altitude of ",sinpi(angle/180) * seq(length(indicator))[indicator==1][i]*bin_width," m.")
+      message("Anomaly #",i," top at an altitude of ",sinpi(angle/180) * seq(length(indicator))[indicator==-1][i]*bin_width," m.")
+      message("Anomaly #",i," width estimated at ",sinpi(angle/180) * (seq(length(indicator))[indicator==-1][i]-seq(length(indicator))[indicator==1][i])*bin_width," m.")
     }
   }
   return(indicator)
@@ -122,47 +122,216 @@ anomaly_detection <- function(data,bin_width=NULL,verbose=FALSE,confidence=0.8,w
 
 range_correction <- function(data,bin_width,range_offset=0)
 {
-  return(log1p(data*(seq(length(data))*bin_width+range_offset)))
+  return(log1p(data*(seq(length(data))*bin_width+range_offset)^2))
 }
 
-extinction_coefficient <- function(data,bin_width,k=1,verbose=FALSE)
+extinction_coefficient <- function(data,scan_type=NULL,angle=NULL,latest_safe_angle=NULL,latest_safe_measurement=NULL,bin_width,k=1,verbose=FALSE)
 {
   corrected_data <- range_correction(background_subtraction(data=data,unsupervised=TRUE,bin_width=bin_width,verbose=verbose),bin_width=bin_width)
-  anomalies <- anomaly_detection(data=expm1(corrected_data),bin_width=bin_width,verbose=verbose)
-  if(sum(abs(anomalies))==0)
-    anomalies[length(anomalies)] <- 1
-  cutoff <- max(min(seq(length(data))[anomalies==1][1],upper_atmosphere_cutoff(data,bin_width=bin_width)),floor(4500/bin_width))
-  indices <- (cutoff:(cutoff+199))[corrected_data[cutoff:(cutoff+199)]!=0]
-  if (length(indices)==0)
-    indices <- (cutoff:(cutoff+199))[corrected_data[cutoff:(cutoff+199)]!=0]
-  if (length(indices)>0)
+  
+  if (TRUE) #TRUE for Klett inversion, FALSE for slope method
   {
-    signal <- corrected_data[indices]
-    if (length(indices)==1)
+    anomalies <- anomaly_detection(data=expm1(corrected_data),bin_width=bin_width,angle=angle,verbose=verbose)
+    if(sum(abs(anomalies))==0)
+      anomalies[length(anomalies)] <- 1
+    cutoff <- max(min(seq(length(data))[anomalies==1][1],upper_atmosphere_cutoff(data,bin_width=bin_width)),floor(4500/bin_width))
+    
+    #test angle change
+    if (verbose)
     {
-      signal <- c(signal,signal*1.001)
-      indices <- c(indices,indices+1)
+      message("Current angle: ",angle)
+      message("Resulting optimal cutoff height: ",cutoff*bin_width*sinpi(angle/180)," m.")
     }
-    coefficient_estimate <- (signal[1:(length(signal)-1)]-signal[2:length(signal)])/(indices[2:length(indices)]-indices[1:(length(indices)-1)])/bin_width/2
-    if (sum(coefficient_estimate>0)>0)
+    
+    if (!(is.null(latest_safe_angle) || is.null(latest_safe_measurement)))
     {
-      coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+      #if there is a safe measurement
+      if (cutoff*bin_width*sinpi(angle/180) > 3000)
+      {
+        if (verbose)
+        {
+          message("Cutoff height is adequate.")
+          message("Updating safe angle and measurement.")
+        }      
+        latest_safe_angle <- angle
+        latest_safe_measurement <- data
+        #message("Latest safe angle: ",latest_safe_angle)
+        
+        
+        
+      } else {
+        if (verbose)
+        {
+          message("Cutoff height too low.")
+          message("Latest safe angle: ",latest_safe_angle)
+          message("Retrieving latest safe extinction coefficient at a height of ",cutoff*bin_width*sinpi(angle/180)," m.")
+          
+          
+          #message("Bin number: ",ceiling(cutoff*sinpi(angle/180)/sinpi(latest_safe_angle/180)))
+          message("Closest available extinction coefficient at a height of ", ceiling(cutoff*sinpi(angle/180)/sinpi(latest_safe_angle/180)) * bin_width* sinpi(latest_safe_angle/180)," m.")
+          message("Proxy for local extinction coefficient: ",latest_safe_measurement[ceiling(cutoff*sinpi(angle/180)/sinpi(latest_safe_angle/180))])
+        }
+      }
+      
+      
+      
+      indices <- (cutoff:(cutoff+199))[corrected_data[cutoff:(cutoff+199)]!=0]
+      if (length(indices)==0)
+        indices <- (cutoff:(cutoff+199))[corrected_data[cutoff:(cutoff+199)]!=0]
+      if (length(indices)>0)
+      {
+        signal <- corrected_data[indices]
+        if (length(indices)==1)
+        {
+          signal <- c(signal,signal*1.001)
+          indices <- c(indices,indices+1)
+        }
+        
+        ###
+        #chegking values
+        if (verbose)
+        {
+          coefficient_estimate <- (signal[1:(length(signal)-1)]-signal[2:length(signal)])/(indices[2:length(indices)]-indices[1:(length(indices)-1)])/bin_width/2
+          if (sum(coefficient_estimate>0)>0)
+          {
+            coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+          } else {
+            coefficient_estimate <- abs(mean(coefficient_estimate))
+          }
+          message("Coefficient estimate :",coefficient_estimate)
+        }
+        ###
+        
+        #bimodal coefficient estimate
+        if (FALSE || cutoff*bin_width*sinpi(angle/180) > 3000) #FALSE for bimodal calculation
+        {
+          coefficient_estimate <- (signal[1:(length(signal)-1)]-signal[2:length(signal)])/(indices[2:length(indices)]-indices[1:(length(indices)-1)])/bin_width/2
+          if (sum(coefficient_estimate>0)>0)
+          {
+            coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+          } else {
+            coefficient_estimate <- abs(mean(coefficient_estimate))
+          }
+        } else {
+          if (verbose)
+            message("Using proxy for the extinction coefficient instead")
+          coefficient_estimate <- latest_safe_measurement[ceiling(cutoff*sinpi(angle/180)/sinpi(latest_safe_angle/180))]
+        }
+        
+        #coefficient_estimate <- (signal[1:(length(signal)-1)]-signal[2:length(signal)])/(indices[2:length(indices)]-indices[1:(length(indices)-1)])/bin_width/2
+        #if (sum(coefficient_estimate>0)>0)
+        #{
+        #  coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+        #} else {
+        #  coefficient_estimate <- abs(mean(coefficient_estimate))
+        #}
+        #  
+        #  if (TRUE && cutoff*bin_width*sinpi(angle/180) <= 3000) #TRUE for the good stuff (prolly)
+        #  {
+        #    if (verbose)
+        #      message("Using proxy for the extinction coefficient instead")
+        #    coefficient_estimate <- latest_safe_measurement[ceiling(cutoff*sinpi(angle/180)/sinpi(latest_safe_angle/180))]
+        #  }
+        
+        
+        
+        #coefficient_estimate <- (signal[1:(length(signal)-1)]-signal[2:length(signal)])/(indices[2:length(indices)]-indices[1:(length(indices)-1)])/bin_width/2
+        #if (sum(coefficient_estimate>0)>0)
+        #{
+        #  coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+        #} else {
+        #  coefficient_estimate <- abs(mean(coefficient_estimate))
+        #}
+        
+        
+        
+        extinction <- exp((corrected_data[min(seq(length(anomalies))[anomalies==1][1],(seq(50)[data[1:50]==max(data[1:50])])[1]):length(corrected_data)]-mean(signal))/k)
+        extinction[extinction<0] <- 0
+        integrals <- c()
+        for (i in 1:length(extinction))
+          integrals <- c(integrals,sum(extinction[i:cutoff])*bin_width)
+        
+        #lastest safe measurement update
+        if (cutoff*bin_width*sinpi(angle/180) > 3000)
+        {
+          if (verbose)
+            message("Updating lastest safe measurement.")
+          latest_safe_measurement <- c(rep(0,min(seq(length(anomalies))[anomalies==1][1],(seq(50)[data[1:50]==max(data[1:50])])[1])-1),extinction/(coefficient_estimate^(-1)+2*integrals/k))
+        }
+        return(list(c(rep(0,min(seq(length(anomalies))[anomalies==1][1],(seq(50)[data[1:50]==max(data[1:50])])[1])-1),extinction/(coefficient_estimate^(-1)+2*integrals/k)),latest_safe_angle,latest_safe_measurement))
+      } else {
+        message("Measurement set contains insufficient non-zero measurements for analysis.")
+        return(list(rep(0,length(data)),latest_safe_angle,latest_safe_measurement))
+      }
     } else {
-      coefficient_estimate <- abs(mean(coefficient_estimate))
+      #if there are no safe meadurements
+      indices <- ((cutoff-199):cutoff)[corrected_data[(cutoff-199):cutoff]!=0]
+      if (length(indices)==0)
+        indices <- ((cutoff-299):cutoff)[corrected_data[(cutoff-299):cutoff]!=0]
+      if (length(indices)>0)
+      {
+        signal <- corrected_data[indices]
+        if (length(indices)==1)
+        {
+          signal <- c(signal,signal*1.001)
+          indices <- c(indices,indices+1)
+        }
+        coefficient_estimate <- (signal[1:(length(signal)-1)]-signal[2:length(signal)])/(indices[2:length(indices)]-indices[1:(length(indices)-1)])/bin_width/2
+        if (sum(coefficient_estimate>0)>0)
+        {
+          coefficient_estimate <- mean(coefficient_estimate[coefficient_estimate>0])
+        } else {
+          coefficient_estimate <- abs(mean(coefficient_estimate))
+        }
+        extinction <- exp((corrected_data[min(seq(length(anomalies))[anomalies==1][1],(seq(50)[data[1:50]==max(data[1:50])])[1]):length(corrected_data)]-mean(signal))/k)
+        extinction[extinction<0] <- 0
+        integrals <- c()
+        for (i in 1:length(extinction))
+          integrals <- c(integrals,sum(extinction[i:cutoff])*bin_width)
+        return(list(c(rep(0,min(seq(length(anomalies))[anomalies==1][1],(seq(50)[data[1:50]==max(data[1:50])])[1])-1),extinction/(coefficient_estimate^(-1)+2*integrals/k)),latest_safe_angle,latest_safe_measurement))
+      } else {
+        message("Measurement set contains insufficient non-zero measurements for analysis.")
+        return(list(rep(0,length(data)),latest_safe_angle,latest_safe_measurement))           
+      }
     }
-    extinction <- exp((corrected_data[min(seq(length(anomalies))[anomalies==1][1],seq(50)[corrected_data[1:50]==max(corrected_data[1:50])]):length(corrected_data)]-mean(signal))/k)
-    extinction[extinction<0] <- 0
-    integrals <- c()
-    for (i in 1:length(extinction))
-      integrals <- c(integrals,sum(extinction[i:cutoff])*bin_width)
-    return(c(rep(0,min(seq(length(anomalies))[anomalies==1][1],seq(50)[corrected_data[1:50]==max(corrected_data[1:50])])-1),extinction/(coefficient_estimate^(-1)+2*integrals/k)))
   } else {
-    message("Measurement set contains insufficient non-zero measurements for analysis.")
-    return(rep(0,length(data)))           
+    #problematic behaviour (division by zero) - suggest we do not proceed with this
+    
+    #extinction <- as.numeric(na.omit(filter(corrected_data[seq(length(corrected_data)) >= (seq(50)[data[1:50]==max(data[1:50])])[1] & seq(length(corrected_data)) <= min(seq(length(corrected_data))[corrected_data==0])],rep(1,5)/5)))
+    
+    #ugly stuff
+    #extinction_2 <- as.numeric(na.omit(filter(corrected_data,rep(1,5)/5)))[seq(length(as.numeric(na.omit(filter(corrected_data,rep(1,5)/5))))) >= (seq(50)[data[1:50]==max(data[1:50])])[1] & seq(length(as.numeric(na.omit(filter(corrected_data,rep(1,5)/5))))) <= min(seq(length(as.numeric(na.omit(filter(corrected_data,rep(1,5)/5)))))[as.numeric(na.omit(filter(corrected_data,rep(1,5)/5)))==0])]
+    
+    #extinction <- c(rep(0,((seq(50)[data[1:50]==max(data[1:50])])[1]-1)[1]),(extinction[2:length(extinction)]-extinction[1:(length(extinction)-1)])/(-2*bin_width*extinction[1:(length(extinction)-1)]),rep(0,length(corrected_data)-(seq(50)[data[1:50]==max(data[1:50])])[1]-length(extinction)+2))
+    #return(list(c(rep(0,min(seq(length(anomalies))[anomalies==1][1],(seq(50)[data[1:50]==max(data[1:50])])[1])-1),extinction/(coefficient_estimate^(-1)+2*integrals/k)),latest_safe_angle,latest_safe_measurement))
+
+    #extinction <- extinction
+    
+    #extinction <- (corrected_data[((seq(50)[data[1:50]==max(data[1:50])])[1]+1):length(corrected_data)] - corrected_data[(seq(50)[data[1:50]==max(data[1:50])])[1]:(length(corrected_data)-1)])/(2*corrected_data[(seq(50)[data[1:50]==max(data[1:50])])[1]:(length(corrected_data)-1)]*bin_width)
+    
+    #barplot(extinction[1:(length(extinction)-1)])
+    
+    #######second try - every non-zero place
+    extinction <- corrected_data[seq(length(corrected_data)) >= (seq(50)[data[1:50]==max(data[1:50])])[1]]
+    extinction[length(extinction)] <- 0
+    extinction[extinction>0] <- (extinction[seq(length(extinction))[extinction>0]+1]-extinction[extinction>0]) / (-2 * extinction[extinction>0] * bin_width)
+    extinction[extinction<0] <- 0
+    extinction[extinction > 0.99 * max(extinction)] <- 0
+    
+    #sum(cumsum(extinction*bin_width)<=3)*bin_width
+    #message(length(data))
+    #message(((seq(50)[data[1:50]==max(data[1:50])])[1]-1)[1])
+    #message(length(list(c(rep(0,(seq(50)[data[1:50]==max(data[1:50])]-1)[1]),extinction),latest_safe_angle,latest_safe_measurement)[[1]]))
+    
+    
+    return(list(c(rep(0,(seq(50)[data[1:50]==max(data[1:50])]-1)[1]),extinction),latest_safe_angle,latest_safe_measurement))
+    #list(c(rep(0,(seq(50)[data[1:50]==max(data[1:50])]-1)[1]),extinction,latest_safe_angle,latest_safe_measurement))[[1]]
   }
+  
+  
 }
 
-scanning_profile_extinction <- function(scanning_directory,measurements_of_interest,is_scan,k=1,verbose=FALSE,output_file=FALSE)
+scanning_profile_extinction <- function(scanning_directory,measurements_of_interest,is_scan,scan_type=NULL,k=1,verbose=FALSE,output_file=FALSE)
 {
   snr_limit <- 0.05
   file_list <- list.files(scanning_directory)[list.files(scanning_directory)!="Output"]
@@ -212,24 +381,110 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
       #data[,indices_under_scrutiny] <- t(t(data[,indices_under_scrutiny])*stabilization)
     }    
   }
+  
+  
+  headers <- c()
+  for (i in 1:length(file_list[measurement_check]))
+    headers <- c(headers,paste(rep(paste("Elevation",-as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[9]),"Azimuth",(as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[10])+as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=2,nrows=1,fill=TRUE))[7])%%360,sep="_"),length(measurements_of_interest)),measurements_of_interest,sep="_"))
+  colnames(data) <- headers
+  
+  safe_measurement <- NULL
+  safe_angle <- NULL
+  #c(10,50,29,5,12,1,40,90)[sort(c(10,50,29,5,12,1,40,90),index.return=TRUE)$ix]
+  #message(scan_type)
+  #sapply(strsplit(headers,split="_"),'[',2)
+  
+  if (is_scan)
+  {
+    
+    
+    if (scan_type=="elevation")
+    {
+      #measurements at maximum angle
+      if (verbose)
+        message("Scan at ",sapply(strsplit(headers,split="_"),'[',2)[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix[1]]," degrees can safely used as reference.")
+      #message("Initialization.")
+      #safe_measurement <- data[,sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix[1]]
+      safe_angle <- sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=FALSE)[1]
+      safe_measurement <- extinction_coefficient(data=data[,sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix[1]],scan_type=NULL,angle=safe_angle,latest_safe_angle=NULL,latest_safe_measurement=NULL,bin_width=bin_width,k=k,verbose=FALSE)[[1]]
+      
+      #message("Safe angle: ",safe_angle)
+      #message(length(safe_measurement))
+      
+      #message("Reordering in progress")
+      #message(sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix)
+      
+      data <- data[,sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix]
+    } else {
+      #do we need to do stuff here? yes we do.
+      if (!is_scan || max(as.numeric(sapply(strsplit(headers,split="_"),'[',2))) <= 85)
+      {
+        if (verbose)
+          message("No reference scan available, processing low scans individually.")
+        safe_angle <- NULL
+        safe_measurement <- NULL
+      } else {
+        if (verbose)
+        {
+          message("Scan at ",sapply(strsplit(headers,split="_"),'[',2)[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix[1]]," degrees can safely used as reference.")
+          #message("Reference scan measurement at ",sapply(strsplit(headers,split="_"),'[',2)[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix[1]]," degrees.")
+        }
+        safe_angle <- sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=FALSE)[1]
+        safe_measurement <- data[,sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix[1]]
+        #message("Safe angle: ",safe_angle)
+        #message(length(safe_measurement))
+      }
+    }
+  }
+  
+  
+  temp_safe_measurement <- NULL
+  temp_safe_angle <- NULL
+  
   if (!verbose)
     progress <- txtProgressBar(max=dim(data)[2],char="=",style=3)
   for (i in 1:dim(data)[2])
   {
     if (verbose && (i%%length(measurements_of_interest)==1 || length(measurements_of_interest)==1))
       message(ceiling(i/length(measurements_of_interest)),"/",sum(measurement_check)," : Processing data file ",file_list[measurement_check][ceiling(i/length(measurements_of_interest))])
-    data[,i] <- extinction_coefficient(data=data[,i],bin_width,k,verbose)
+    
+    if (i==1 && is_scan)
+    {
+      if (verbose)
+        #message("Initialization")
+      temp_safe_measurement <- safe_measurement
+      temp_safe_angle <- safe_angle
+    }
+    
+    
+    #temp_safe_angle <- temp_safe_angle
+    
+    #message("Safe angle to be used: ",temp_safe_angle)
+    #data[,i] <- extinction_coefficient(data=data[,i],bin_width=bin_width,angle=as.integer(strsplit(colnames(data)[i],split="_")[[1]][2]),k=k,verbose=verbose)
+    #message("Current angle: ",temp_safe_angle)
+    if (verbose && is_scan && !is.null(temp_safe_angle))
+      message("Lowest safe angle: ",temp_safe_angle)
+    #data[,i] <- extinction_coefficient(data=data[,i],scan_type=scan_type,angle=as.integer(strsplit(colnames(data)[i],split="_")[[1]][2]),latest_safe_angle=temp_safe_angle,latest_safe_measurement=temp_safe_measurement,bin_width=bin_width,k=k,verbose=verbose)
+    
+    temp_data <- extinction_coefficient(data=data[,i],scan_type=scan_type,angle=as.integer(strsplit(colnames(data)[i],split="_")[[1]][2]),latest_safe_angle=temp_safe_angle,latest_safe_measurement=temp_safe_measurement,bin_width=bin_width,k=k,verbose=verbose)
+    #temp_data <- extinction_coefficient(data=data[,i],scan_type=scan_type,angle=as.integer(strsplit(colnames(data)[i],split="_")[[1]][2]),latest_safe_angle=NULL,latest_safe_measurement=NULL,bin_width=bin_width,k=k,verbose=verbose)
+    
+    
+    temp_safe_angle <- temp_data[[2]]
+    temp_safe_measurement <- temp_data[[3]]
+    temp_data <- temp_data[[1]] #needs tidying up
+    data[,i] <- temp_data
+    #message("Safe angle to be used next: ",temp_safe_angle)
+    
     if (!verbose)
       setTxtProgressBar(progress,i)
   }
+  rm(safe_angle,temp_safe_angle,safe_measurement,temp_safe_measurement)
+  
   measurement_check[measurement_check][colSums(data)==0] <- FALSE
   data <- data[,colSums(data)!=0]
   if (!verbose)
     close(progress)
-  headers <- c()
-  for (i in 1:length(file_list[measurement_check]))
-    headers <- c(headers,paste(rep(paste("Elevation",-as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[9]),"Azimuth",(as.numeric(read.table(paste(scanning_directory,file_list[measurement_check][i],sep="/"),skip=1,nrows=1,fill=TRUE)[10])+as.numeric(read.table(paste(scanning_directory,file_list[i],sep="/"),skip=2,nrows=1,fill=TRUE))[7])%%360,sep="_"),length(measurements_of_interest)),measurements_of_interest,sep="_"))
-  colnames(data) <- headers
   rownames(data) <- as.character(seq(dim(data)[1])*bin_width)
   if(output_file)
     write.table(data,file=paste("Radial_extinction_coefficients",wavelength,"nm.txt",sep="_"),quote=FALSE,sep="\t",row.names=TRUE,col.names=TRUE)
@@ -323,7 +578,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
         angled_extinction_profile <- c()
         for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
         {
-          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
           #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
         }
       } else {
@@ -338,7 +593,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
         angled_extinction_profile <- c()
         for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
         {
-          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
           #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
         }
       }
@@ -374,7 +629,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
           for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
           {
-            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
             #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
           }
           #message(angle)
@@ -399,7 +654,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
           for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
           {
-            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
             #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
           }
           #message(angle)
@@ -425,7 +680,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
           for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
           {
-            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
             #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
           }
           #message(angle)
@@ -453,7 +708,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
             for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
             {
-              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
               #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
             }
             #message(angle)
@@ -473,7 +728,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
             for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
             {
-              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
               #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
             }
             #message(angle)
@@ -494,7 +749,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
             for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
             {
-              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
               #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
             }
             #message(angle)
@@ -521,7 +776,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             offsets <- ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))
             for (j in range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[2])
             {
-              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),(j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
+              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
               #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
             }
             #message(angle)
@@ -544,7 +799,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             
             for (j in range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[2])
             {
-              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),(j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
+              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
               #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
             }
             #message(angle)
@@ -565,7 +820,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
             
             for (j in range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[2])
             {
-              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),(j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
+              angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
               #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
             }
             #message(angle)
@@ -607,7 +862,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
           for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
           {
-            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
             #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
           }
           #message(angle)
@@ -626,7 +881,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
           for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
           {
-            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
             #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
             
           }
@@ -647,7 +902,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
           for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
           {
-            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
             #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
           }
           #message(angle)
@@ -672,7 +927,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           offsets <- ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))
           for (j in range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[2])
           {
-            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),(j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
+            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
             #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
           }
           #message(angle)
@@ -692,7 +947,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           offsets <- ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))
           for (j in range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[2])
           {
-            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),(j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
+            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
             #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
             
           }
@@ -713,7 +968,17 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
           offsets <- ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width)))
           for (j in range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]:range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[2])
           {
-            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),(j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
+            #minnie_beginning <- 1+sum(offsets<j)
+            #if (minnie_beginning > dim(minnie_profile)[1])
+            #  minnie_beginning <- dim(minnie_profile)[1]
+            #minnie_end <- sum(offsets<j+1)
+            #if (minnie_end > dim(minnie_profile)[1])
+            #  minnie_end <- dim(minnie_profile)[1]
+            #minnie_length <- j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1
+            #if (minnie_length > dim(minnie_profile)[2])
+            #  minnie_length <- dim(minnie_profile)[2]
+            
+            angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j-range(ceiling(incoming_distance/bin_width) + c(-1,1)[as.integer(!incoming)+1] * seq(floor(incoming_height/tan(angle*pi/180)/bin_width))%/%ceiling(floor(incoming_height/tan(angle*pi/180)/bin_width)/ceiling(tan(angle*pi/180)*floor(incoming_height/tan(angle*pi/180)/bin_width))))[1]+1)])
             #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
           }
           #message(angle)
@@ -742,7 +1007,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
         offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
         for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
         {
-          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
           #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
         }
         #message(angle)
@@ -764,7 +1029,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
         offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
         for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
         {
-          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
           #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
         }
         #message(angle)
@@ -786,7 +1051,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
         offsets <- seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width)))
         for (j in range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[1]:range(seq(ceiling(incoming_height/bin_width))%/%ceiling(ceiling(incoming_height/bin_width)/ceiling(tan(angle*pi/180)*ceiling(incoming_height/bin_width))))[2])
         {
-          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[(1+sum(offsets<j)):sum(offsets<j+1),j+1])
+          angled_extinction_profile <- c(angled_extinction_profile,minnie_profile[min(dim(minnie_profile)[1],1+sum(offsets<j)):min(dim(minnie_profile)[1],sum(offsets<j+1)),min(dim(minnie_profile)[2],j+1)])
           #angled_extinction_profile <- c(angled_extinction_profile,rep(colnames(minnie_profile)[j+1],1+diff(range((1+sum(offsets<j)):sum(offsets<j+1)))))
           
         }
@@ -821,7 +1086,7 @@ progressive_slant_range <- function(cartesian_extinction,bin_width,model=NULL,wa
 
 angstrom_exponent_extinction_coefficient_conversion <- function(extinction,lidar_wavelength)
 {
-  optical_depth_data <- read.table("/home/SAFETRANS/AERONET_data.txt",header=TRUE,sep="\t")
+  optical_depth_data <- read.table("C:/Users/Hector-Xavier/Desktop/Default directory/AERONET_data.txt",header=TRUE,sep="\t")
   optical_depth_data <- optical_depth_data[,!is.na(colSums(optical_depth_data))]  
   if (lidar_wavelength==355)
   {
@@ -884,9 +1149,16 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
     }
     for (i in 1:length(levels(as.factor(channels))))
     {
-      png(file=file.path(paste(getwd(),"Azimuth_visibility_plots",sep="/"),paste("Radial_visibility_",model,"_channel_",levels(as.factor(channels))[i],".png", sep = "")),width=1000,height=1000)
-      radial.plot(lengths=visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1],radial.pos=angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i]/180*pi,labels=c("N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"),label.pos=(seq(16)-1)/8*pi,start=+pi/2,clockwise=TRUE,rp.type="p",radial.lim=pretty(range(c(0,visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1]))),show.grid.labels=1,radial.labels=paste(pretty(range(c(0,visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1])))/1000,"km",sep=" "),show.centroid=TRUE,main=paste("Radial visibility at",strsplit(rownames(visibility)[1],split="_")[[1]][2],"degrees in channel",levels(as.factor(channels))[i],sep=" "))
+      warn_default <- getOption("warn")
+      options(warn=-1)
+      #png(file=file.path(paste(getwd(),"Azimuth_visibility_plots",sep="/"),paste("Radial_visibility_",model,"_channel_",levels(as.factor(channels))[i],".png", sep = "")),width=1000,height=1000)
+      png(file=file.path(paste(getwd(),"Azimuth_visibility_plots",sep="/"),paste("Radial_visibility_",model,"_channel_",levels(as.factor(channels))[i],".png", sep = "")),width=870,height=870)
+      #radial.plot(lengths=visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1],radial.pos=angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i]/180*pi,labels=c("N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"),label.pos=(seq(16)-1)/8*pi,start=+pi/2,clockwise=TRUE,rp.type="pt",point.symbols=visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1],point.col=c("green4","black","darkorange","red")[rowSums(visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1] <= matrix(rep(c(1000,6000,10000),length(visibility[,1])),ncol=3,byrow=TRUE)) + 1],radial.lim=pretty(range(c(0,visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1]))),show.grid.labels=0,radial.labels=paste(pretty(range(c(0,visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1])))/1000,"km",sep=" "),show.centroid=TRUE,main=paste("Radial visibility at",strsplit(rownames(visibility)[1],split="_")[[1]][2],"degrees in channel",levels(as.factor(channels))[i],sep=" "))
+      radial.plot(lengths=visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1],radial.pos=angle[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i]/180*pi,labels=c("N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"),label.pos=(seq(16)-1)/8*pi,start=+pi/2,clockwise=TRUE,rp.type="pt",point.symbols=visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1],point.col=c("green4","black","darkorange","red")[rowSums(visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1] <= matrix(rep(c(4500,7000,10000),length(visibility[,1])),ncol=3,byrow=TRUE)) + 1],radial.lim=pretty(range(c(0,visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1]))),show.grid.labels=0,radial.labels=paste(pretty(range(c(0,visibility[(seq(length(channels)/length(levels(as.factor(channels))))-1)*length(levels(as.factor(channels)))+i,1])))/1000,"km",sep=" "),show.centroid=TRUE,main=paste("Radial visibility at",strsplit(rownames(visibility)[1],split="_")[[1]][2],"degrees in channel",levels(as.factor(channels))[i],sep=" "))
+      legend("topleft",legend=c("Visibility over 10 km","Visibility between 7km and 10km","Visibility between 4.5km and 7km","Visibility less than 4.5km"),pch=15,col=c("green4","black","darkorange","red"))
       dev.off()
+      options(warn = warn_default)
+      rm(warn_default)
     }
     if(research_material && !file.exists(paste(getwd(),"Azimuth_visibility_plots",paste("Incoming_visibilities",model,sep="_"),sep="/")))
     {
@@ -922,13 +1194,13 @@ radial_visibility_profile <- function(extinction_profile,is_scan=TRUE,model=NULL
         close(progress)
     } else {
       if(research_material)
-        message("Incoming radial visibility plots for atmospheric model '",model,"' already exist. Calculation & visualization skipped.") 
+        message("Incoming radial visibility plots for atmospheric model '",model,"' already exist. Calculation & visualization skipped.")
     }
   }
   #return(visibility)
 }
 
-cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelength,incoming=FALSE,incoming_distance=NULL,incoming_height=NULL,output_files=TRUE,verbose=TRUE)
+cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelength,incoming=FALSE,incoming_distance=NULL,incoming_height=NULL,output_files=TRUE,verbose=TRUE,research_material=FALSE)
 {
   if (incoming && (is.null(incoming_distance) || is.null(incoming_height)))
     stop("Please designate both the height and the distance of the incoming object.")
@@ -1089,5 +1361,5 @@ cartesian_visibility_profile <- function(extinction_profile,model=NULL,wavelengt
       }
     }
   }
-  #return(cartesian_profile)
+  return(cartesian_profile)
 }
