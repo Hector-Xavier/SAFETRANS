@@ -49,7 +49,7 @@ research_material <- FALSE
 
 if (!is_scan)
 {
-  radial_visibility_profile(extinction_profile=scanning_profile_extinction(directory,channels,is_scan,1,verbose,output),is_scan,model,wavelength,output,verbose,research_material)
+  radial_visibility_profile(extinction_profile=scanning_profile_extinction(directory,channels,is_scan,scan_type,1,verbose,output),is_scan,model,wavelength,output,verbose,research_material)
 } else {
   message("Processing measurements as a set of ",scan_type," measurements.")
   if (file.exists(paste("Radial_extinction_coefficients",wavelength,"nm.txt",sep="_")))
@@ -60,7 +60,7 @@ if (!is_scan)
   } else {
     if (!verbose)
       message("Importing data and calculating the radial extinction coefficent profile.")
-    extinction <- scanning_profile_extinction(directory,channels,is_scan,1,verbose,output)
+    extinction <- scanning_profile_extinction(directory,channels,is_scan,scan_type,1,verbose,output)
   }
   if (scan_type=="azimuth")
   {
@@ -84,15 +84,15 @@ if (!is_scan)
       message("Calculating visibility ranges of ",c("outcoming","incoming")[as.integer(incoming)+1]," object.")
     if (!is.null(model) && model=="all")
     {
-      cartesian_visibility_profile(extinction,NULL,wavelength,incoming,distance,height,output,verbose)
+      cartesian_visibility_profile(extinction,NULL,wavelength,incoming,distance,height,output,verbose,research_material)
       if (wavelength!=355)
       {
-        cartesian_visibility_profile(extinction,"maritime",wavelength,incoming,distance,height,output,verbose)
-        cartesian_visibility_profile(extinction,"urban-rural",wavelength,incoming,distance,height,output,verbose)
+        cartesian_visibility_profile(extinction,"maritime",wavelength,incoming,distance,height,output,verbose,research_material)
+        cartesian_visibility_profile(extinction,"urban-rural",wavelength,incoming,distance,height,output,verbose,research_material)
       }
-      cartesian_visibility_profile(extinction,"angstrom_exponent",wavelength,incoming,distance,height,output,verbose)
+      cartesian_visibility_profile(extinction,"angstrom_exponent",wavelength,incoming,distance,height,output,verbose,research_material)
     } else {
-      cartesian_visibility_profile(extinction,model,wavelength,incoming,distance,height,output,verbose)
+      cartesian_visibility_profile(extinction,model,wavelength,incoming,distance,height,output,verbose,research_material)
     }
   }
 }
