@@ -706,7 +706,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
           #message("Reference scan measurement at ",sapply(strsplit(headers,split="_"),'[',2)[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix[1]]," degrees.")
         }
         
-        #this part could be removed, too, since elevation scans do not include a vertical one
+        #this part could be removed, too, since azimuth scans do not usually include a vertical one
         safe_angle <- sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=FALSE)[1]
         safe_measurement <- data[,sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix[1]]
         #message("Safe angle: ",safe_angle)
@@ -737,13 +737,16 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
       message("Lowest safe angle: ",temp_safe_angle)
     
     #updating the "safe" measurement
-    temp_data <- extinction_coefficient(data=data[,i],scan_type=scan_type,angle=as.integer(strsplit(headers[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix][i],split="_")[[1]][2]),latest_safe_angle=temp_safe_angle,latest_safe_measurement=temp_safe_measurement,bin_width=bin_width,k=k,verbose=verbose)
-    
-    temp_safe_angle <- temp_data[[2]]
-    temp_safe_measurement <- temp_data[[3]]
-    temp_data <- temp_data[[1]] #needs tidying up
-    data[,i] <- temp_data
-    #message("Safe angle to be used next: ",temp_safe_angle)
+    if ((as.integer(strsplit(headers[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix][i],split="_")[[1]][2])) > 0)
+    {
+      temp_data <- extinction_coefficient(data=data[,i],scan_type=scan_type,angle=as.integer(strsplit(headers[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix][i],split="_")[[1]][2]),latest_safe_angle=temp_safe_angle,latest_safe_measurement=temp_safe_measurement,bin_width=bin_width,k=k,verbose=verbose)
+      
+      temp_safe_angle <- temp_data[[2]]
+      temp_safe_measurement <- temp_data[[3]]
+      temp_data <- temp_data[[1]] #needs tidying up
+      data[,i] <- temp_data
+      #message("Safe angle to be used next: ",temp_safe_angle)
+    }
     
     if (!verbose)
       setTxtProgressBar(progress,i)
