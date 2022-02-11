@@ -52,7 +52,7 @@ reading_and_preparation <- function(filename,significant_data_sets)
   return(raw_data)
 }
 
-background_subtraction <- function(data, pre_trigger=FALSE,unsupervised=FALSE,first_bin=NULL,last_bin=NULL,first_valid_bin=NULL,bin_width=NULL,zeroing=FALSE,verbose=FALSE)
+background_subtraction <- function(data,pre_trigger=FALSE,unsupervised=FALSE,first_bin=NULL,last_bin=NULL,first_valid_bin=NULL,bin_width=NULL,zeroing=FALSE,verbose=FALSE)
 {
   if (unsupervised)
   {
@@ -573,7 +573,7 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
   for (i in 2:length(file_list))
   {
     data <- cbind(data,reading_and_preparation(filename=paste(scanning_directory,file_list[i],sep="/"),significant_data_sets=max(measurements_of_interest,2))[,measurements_of_interest])
-  
+    
     #initialization of the list of acceptable measurements, giving special consideration to using a single photon counting channel
     if (sum(measurements_of_interest==2) == 1 || sum(measurements_of_interest==4) == 1)
     {
@@ -736,17 +736,15 @@ scanning_profile_extinction <- function(scanning_directory,measurements_of_inter
     if (verbose && is_scan && !is.null(temp_safe_angle))
       message("Lowest safe angle: ",temp_safe_angle)
     
+    temp_data <- extinction_coefficient(data=data[,i],scan_type=scan_type,angle=as.integer(strsplit(headers[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix][i],split="_")[[1]][2]),latest_safe_angle=temp_safe_angle,latest_safe_measurement=temp_safe_measurement,bin_width=bin_width,k=k,verbose=verbose)
     #updating the "safe" measurement
-    if ((as.integer(strsplit(headers[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix][i],split="_")[[1]][2])) > 0)
+    if (is_scan && (as.integer(strsplit(headers[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix][i],split="_")[[1]][2])) > 0)
     {
-      temp_data <- extinction_coefficient(data=data[,i],scan_type=scan_type,angle=as.integer(strsplit(headers[sort(as.numeric(sapply(strsplit(headers,split="_"),'[',2)),decreasing=TRUE,index.return=TRUE)$ix][i],split="_")[[1]][2]),latest_safe_angle=temp_safe_angle,latest_safe_measurement=temp_safe_measurement,bin_width=bin_width,k=k,verbose=verbose)
-      
       temp_safe_angle <- temp_data[[2]]
       temp_safe_measurement <- temp_data[[3]]
-      temp_data <- temp_data[[1]] #needs tidying up
-      data[,i] <- temp_data
       #message("Safe angle to be used next: ",temp_safe_angle)
     }
+    data[,i] <- temp_data[[1]]
     
     if (!verbose)
       setTxtProgressBar(progress,i)
