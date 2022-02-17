@@ -57,7 +57,7 @@ background_subtraction <- function(data,pre_trigger=FALSE,unsupervised=FALSE,fir
   if (unsupervised)
   {
     #unsupervised execution will use the "upper_atmosphere_cutoff" method to choose a cutoff point for background estimation and use it to re-run itself
-    return(background_subtraction(data,first_bin=upper_atmosphere_cutoff(data,bin_width=bin_width,verbose=verbose),last_bin=length(data),zeroing=zeroing))
+    return(background_subtraction(data,first_bin=upper_atmosphere_cutoff(data,bin_width=bin_width,verbose=FALSE),last_bin=length(data),zeroing=zeroing))
   } else {
     data <- data - mean(data[first_bin:last_bin])
     if (pre_trigger)
