@@ -81,7 +81,7 @@ upper_atmosphere_cutoff <- function(data,bin_width,range_offset=0,verbose=FALSE)
     stop("Please enter a valid value for bin_width, as it is necessary for unsupervised usage.")
   
   #usage of the distribution's tail as a reference for average noise profile
-  temp_data <- expm1(range_correction(data=background_subtraction(data,first_bin=length(data)-2000,last_bin=length(data),zeroing=TRUE),bin_width))
+  temp_data <- expm1(range_correction(data=background_subtraction(data,first_bin=length(data)-2000,last_bin=length(data),zeroing=FALSE),bin_width))
   temp_snr <- c()
   for (i in 1:(length(temp_data)-150))
     temp_snr <- c(temp_snr,mean(temp_data[i:(i+150)])/sd(temp_data[i:(i+150)]))
@@ -343,17 +343,16 @@ extinction_coefficient <- function(data,scan_type=NULL,angle=NULL,latest_safe_an
   if (TRUE) #TRUE for Klett inversion, FALSE for slope method
   {
     #in case of atmospheric anomalies, the reference point used in Klett inversion is moved accordingly
-    #anomalies <- anomaly_detection(data=expm1(corrected_data),bin_width=bin_width,angle=angle,verbose=verbose)
     anomalies <- anomaly_detection(data=expm1(range_correction(background_subtraction(data=data,unsupervised=TRUE,bin_width=bin_width,zeroing=TRUE,verbose=verbose),bin_width=bin_width)),bin_width=bin_width,angle=angle,verbose=verbose)
     if(sum(abs(anomalies))==0)
       anomalies[length(anomalies)] <- 1
-    cutoff <- max(min(seq(length(data))[anomalies==1][1],upper_atmosphere_cutoff(data,bin_width=bin_width)),floor(4500/bin_width))
+    cutoff <- max(min(seq(length(data))[anomalies==1][1],upper_atmosphere_cutoff(data,bin_width=bin_width)),floor(4000/bin_width))
     
     #reference point as a message
     if (verbose)
     {
       message("Current angle: ",angle)
-      message("Optimal reference range after accounting for atmospheric anomalies and a minimum of 4.5 km: ",cutoff*bin_width," m.")
+      message("Optimal reference range after accounting for atmospheric anomalies and a minimum of 4 km: ",cutoff*bin_width," m.")
       message("Resulting optimal reference height: ",cutoff*bin_width*sinpi(angle/180)," m.")
     }
     #initialization of reference point
@@ -444,11 +443,8 @@ extinction_coefficient <- function(data,scan_type=NULL,angle=NULL,latest_safe_an
         
         #alternate Klett inversion, correcting for low-signal artifacts concerning the reference point
         temp_extinction <- c(rep(0,min(seq(length(anomalies))[anomalies==1][1],(seq(50)[data[1:50]==max(data[1:50])])[1])-1),extinction/(coefficient_estimate^(-1)+2*integrals/k))
-        #coefficient_estimate <- coefficient_estimate * mean(temp_extinction) / max(temp_extinction)
-        #coefficient_estimate <- coefficient_estimate /100
-        if (log10(max(temp_extinction/mean(temp_extinction))) >= 1.5)
+        if (log10(max(temp_extinction/mean(temp_extinction))) >= 0.7)
           coefficient_estimate <- coefficient_estimate * 10 ^ ceiling(log10(mean(temp_extinction) / max(temp_extinction)))
-        #coefficient_estimate <- coefficient_estimate/100
         #message("Force to local mean coefficient: ", mean(temp_extinction) / max(temp_extinction))
         #message("Order of magnitude correction coefficient: ", 10 ^ ceiling(log10(mean(temp_extinction) / max(temp_extinction))))
         rm(temp_extinction)
@@ -493,11 +489,8 @@ extinction_coefficient <- function(data,scan_type=NULL,angle=NULL,latest_safe_an
         
         #alternate Klett inversion, correcting for low-signal artifacts concerning the reference point
         temp_extinction <- c(rep(0,min(seq(length(anomalies))[anomalies==1][1],(seq(50)[data[1:50]==max(data[1:50])])[1])-1),extinction/(coefficient_estimate^(-1)+2*integrals/k))
-        #coefficient_estimate <- coefficient_estimate * mean(temp_extinction) / max(temp_extinction)
-        #coefficient_estimate <- coefficient_estimate /100
-        if (log10(max(temp_extinction/mean(temp_extinction))) >= 1.5)
+        if (log10(max(temp_extinction/mean(temp_extinction))) >= 0.7)
           coefficient_estimate <- coefficient_estimate * 10 ^ ceiling(log10(mean(temp_extinction) / max(temp_extinction)))
-        #coefficient_estimate <- coefficient_estimate/100
         #message("Force to local mean coefficient: ", mean(temp_extinction) / max(temp_extinction))
         #message("Order of magnitude correction coefficient: ", 10 ^ ceiling(log10(mean(temp_extinction) / max(temp_extinction))))
         rm(temp_extinction)
